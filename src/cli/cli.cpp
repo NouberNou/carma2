@@ -7,55 +7,39 @@
 #include "compiler\compiler.hpp"
 
 namespace carma {
-	void tokenize_simple_assigments(token_list &tokens_) {
+	std::string build_string(token_list tokens_) {
+		std::string output = "";
 		for (auto current_token = tokens_.begin(); current_token != tokens_.end(); ++current_token) {
 			if (current_token->type == carma::type::EMPTY)
 				continue;
-			if (std::next(current_token) != tokens_.end() && std::next(current_token)->val == ".") {
-				auto dot_token = std::next(current_token);
-				auto member_token = std::next(current_token, 2);
-				if (member_token == tokens_.end())
-					continue;
-				auto next_token = std::next(current_token, 3);
-				if (next_token == tokens_.end())
-					continue;
-				if ((next_token->type == carma::type::OPERATOR || next_token->type == carma::type::ENDOFSTATEMENT) && next_token->val != "=" && next_token->val != "(") {
-					std::string simple_assignment = "(" + current_token->val + " getVariable \"" + member_token->val + "\")";
-					if (next_token->val != ".") {
-						current_token->type = carma::type::EMPTY;
-						dot_token->type = carma::type::EMPTY;
-						member_token->val = simple_assignment;
-						current_token = member_token;
-					}
-					else {
-						member_token->val = simple_assignment;
-						dot_token->type = carma::type::EMPTY;
-						current_token->type = carma::type::EMPTY;
-						current_token = dot_token;
-					}
-				}
+			output += current_token->val;
+			if (std::next(current_token) != tokens_.end() && current_token->type == carma::type::LITERAL && std::next(current_token)->type == carma::type::LITERAL) {
+				output += " ";
 			}
-		}
+			else if (current_token->type == carma::type::ENDOFSTATEMENT) {
+				output += " ";
+			}
+		};
+		return output;
 	}
 }
 
 
 int main(int argc, char **argv) {
-	std::string input_str = "_fuck.obj.poop = { _test = _fuck.obj*_fuck.job(); player setDamage _test; };";
+	std::string input_str = "(_test select 0).fuck;";
 	carma::token_list tokens = carma::tokenize(input_str);
-	carma::tokenize_simple_assigments(tokens);
-	std::string output = "";
 	
-	for (auto current_token = tokens.begin(); current_token != tokens.end(); ++current_token) {
-		if (current_token->type == carma::type::EMPTY)
-			continue;
-		output += current_token->val;
-		if (std::next(current_token) != tokens.end() && current_token->type == carma::type::LITERAL && std::next(current_token)->type == carma::type::LITERAL) {
-			output += " ";
-		}
-		else if (current_token->type == carma::type::ENDOFSTATEMENT) {
-			output += " ";
-		}
-	};
+	carma::process_accessors(tokens);
+	std::cout << carma::build_string(tokens) << "\n\n";
+	uint32_t dummy_block_counter = 0;
+	carma::process_simple_assigments(tokens, tokens.begin(), dummy_block_counter);
+	std::cout << carma::build_string(tokens) << "\n\n";
+	carma::process_method_calls(tokens, tokens.begin());
+	std::cout << carma::build_string(tokens) << "\n\n";
+	carma::process_new_keyword(tokens, tokens.begin());
+	std::cout << carma::build_string(tokens) << "\n\n";
+	carma::process_del_keyword(tokens, tokens.begin());
+	std::cout << carma::build_string(tokens) << "\n\n";
+
 	return 0;
 }
