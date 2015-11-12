@@ -70,3 +70,4 @@ Passing an object to a SQF function or a carma2 object method can be done anonym
 ```
 [new someObject()] call some_sqf_fnc;
 _myObject.method(new subObject());
+```
