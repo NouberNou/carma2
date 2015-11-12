@@ -1,6 +1,8 @@
 # carma2
 
-A little thinline object parser/translator for RV SQF.
+A thinline object parser/translator for RV SQF offering a prototyped object system with automatic, unintrusive garbage collecting memory managment.
+
+The only dependency is [CBA](https://github.com/CBATeam/CBA_A3).
 
 ## Concept
 
@@ -8,7 +10,7 @@ The concept of carma2 is to add a very low overhead, very simple object implemen
 
 Implementation of objects is done in a very simple fashion that ultimately is closer to syntactic sugar than it is a "proper" object implementation, but through the help of helpers provides a robust object system. Objects are created using the `new` keyword and members and methods are accessed using the `.` operator and assigned/defined using the standard SQF `=` operator. The only major difference is that method invokation is done using `()` following the method name, instead of the standard SQF `arg call function` format (though it is entirely possible to invoke methods this way, though with some caveats). 
 
-For example:
+A simple carma2 example is below:
 ```
 _testObject = new carma2_object(); // create a new object from the default carma2_base object
 _testObject.myMethod = { player sideChat "hello world!"; };
@@ -38,6 +40,21 @@ _testObject.myMethod(); // calls myMethod and displays "myVal: 2"
 ```
 
 Objects can call a constructor like function on creation by assigning the special method `__init`. There are no destructors in carma2 as the system uses a garbage collecting reference tracker. Implementation of a special method for when the object is garbage collected (or the `del` keyword is used) is forthcoming, though programmers using carma2 should make sure to smartly implement resources that need to be freed in a way that is not dependent on the lifespan of the object.
+
+## Usage
+
+Using carma2 is very simple. Launch with the mod enabled/included, as well as CBA.
+
+A simple usage example is here:
+```
+#include "\x\carma2\rv\addons\lib\carma.hpp"
+
+CARMA_COMPILE("test.sqf");
+```
+
+That code will compile and load the file `test.sqf`. You can then access any globally defined objects compiled in there.
+
+The `CARMA_COMPILE` macro is a macro to `carma2_fnc_compile`. If you just wish to compile your code with out executing it (not often the case), you can pass an optional `false` argument. The compilation function will return the compiled results either way.
 
 ## Advanced Concepts
 
