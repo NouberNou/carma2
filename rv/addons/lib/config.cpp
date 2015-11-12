@@ -14,3 +14,9 @@ class Extended_PreInit_EventHandlers {
 		init = "[] call (compile preprocessFileLineNumbers '\x\carma2\rv\addons\lib\XEH_pre_init.sqf');";
 	};
 };
+
+class CarmaBlank {
+    class CarmaDummy {
+        val = 1;
+    };
+};
