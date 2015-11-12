@@ -50,7 +50,7 @@ _testObject.myMethod = { player sideChat "hello world!"; };
 _testObject.myMethod(); // calls myMethod and displays "hello world!"
 
 _anotherTestObject = new _testObject();
-_testObject.myMethod = { _thisObj.__prototype.myMethod(); player sideChat "good bye world!"; };
+_anotherTestObject.myMethod = { _thisObj.__prototype.myMethod(); player sideChat "good bye world!"; };
 _anotherTestObject.myMethod(); // calls myMethod on this new object, which invokes myMethod from _testObject, printing "hello world!" and then "good bye world!"
 ```
 
