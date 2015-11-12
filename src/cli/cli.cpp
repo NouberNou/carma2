@@ -7,26 +7,12 @@
 #include "compiler\compiler.hpp"
 
 namespace carma {
-	std::string build_string(token_list tokens_) {
-		std::string output = "";
-		for (auto current_token = tokens_.begin(); current_token != tokens_.end(); ++current_token) {
-			if (current_token->type == carma::type::EMPTY)
-				continue;
-			output += current_token->val;
-			if (std::next(current_token) != tokens_.end() && current_token->type == carma::type::LITERAL && std::next(current_token)->type == carma::type::LITERAL) {
-				output += " ";
-			}
-			else if (current_token->type == carma::type::ENDOFSTATEMENT) {
-				output += " ";
-			}
-		};
-		return output;
-	}
+	
 }
 
 
 int main(int argc, char **argv) {
-	std::string input_str = "(_test select 0).fuck;";
+	std::string input_str = "_fuck.ok();";
 	carma::token_list tokens = carma::tokenize(input_str);
 	
 	carma::process_accessors(tokens);
