@@ -245,13 +245,13 @@ namespace carma {
 						value_tokens.push_back(*value_token);
 					}
 
-					next_token->val = "([";
+					next_token->val = "([" + object_token->val + ",\"" + member_token->val + "\",[";
 					object_token->type = carma::type::EMPTY;
 					dot_token->type = carma::type::EMPTY;
 					member_token->type = carma::type::EMPTY;
 					token end_token;
 					end_token.type = carma::type::UNKNOWN;
-					end_token.val = "] call {private [\"__carma__originalObj\", \"_ret\"]; __carma__originalObj = _thisObj; _thisObj = " + object_token->val + "; _ret = _this call (_thisObj getVariable \"" + member_token->val + "\"); _thisObj = __carma__originalObj; _ret;})";
+					end_token.val = "]] call carma2_fnc_methodInvoke";
 					tokens_.insert(value_token, end_token);
 				}
 			}
@@ -295,7 +295,7 @@ namespace carma {
 					current_token->type = carma::type::EMPTY;
 					token end_token;
 					end_token.type = carma::type::UNKNOWN;
-					end_token.val = "], " + object_token->val + ", __FILE__, __LINE__] call carma2_fnc_newObject)";
+					end_token.val = "], " + object_token->val + ", __FILE__, __LINE__] call carma2_fnc_newObject";
 					tokens_.insert(value_token, end_token);
 				}
 			}
@@ -319,5 +319,21 @@ namespace carma {
 				}
 			}
 		}
+	}
+
+	std::string build_string(const token_list &tokens_) {
+		std::string output = "";
+		for (auto current_token = tokens_.begin(); current_token != tokens_.end(); ++current_token) {
+			if (current_token->type == carma::type::EMPTY)
+				continue;
+			output += current_token->val;
+			if (std::next(current_token) != tokens_.end() && current_token->type == carma::type::LITERAL && std::next(current_token)->type == carma::type::LITERAL) {
+				output += " ";
+			}
+			else if (current_token->type == carma::type::ENDOFSTATEMENT) {
+				output += " ";
+			}
+		};
+		return output;
 	}
 };
