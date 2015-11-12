@@ -190,9 +190,7 @@ namespace carma {
 						if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
 							block_counter--;
 						if (value_token->val == ".") {
-							//if (std::next(value_token, 2) != tokens_.end() && std::next(value_token, 2)->val == "=") {
-								process_simple_assigments(tokens_, std::prev(value_token), block_counter);
-							//}
+							process_simple_assigments(tokens_, std::prev(value_token), block_counter);
 						}
 						value_tokens.push_back(*value_token);
 					}
@@ -238,9 +236,7 @@ namespace carma {
 						if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
 							block_counter--;
 						if (value_token->val == ".") {
-							//if (std::next(value_token, 2) != tokens_.end() && std::next(value_token, 2)->val == "=") {
 							process_method_calls(tokens_, std::prev(value_token));
-							//}
 						}
 						value_tokens.push_back(*value_token);
 					}
@@ -283,9 +279,7 @@ namespace carma {
 						if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
 							block_counter--;
 						if (value_token->val == ".") {
-							//if (std::next(value_token, 2) != tokens_.end() && std::next(value_token, 2)->val == "=") {
 							process_new_keyword(tokens_, std::prev(value_token));
-							//}
 						}
 						value_tokens.push_back(*value_token);
 					}
