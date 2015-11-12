@@ -1,6 +1,8 @@
 # carma2
 
-A thinline object parser/translator for RV SQF offering a prototyped object system with automatic, unintrusive garbage collecting memory managment.
+A thinline object parser/translator for RV SQF offering a prototyped object system with automatic, unintrusive garbage collecting memory management.
+
+Github: https://github.com/NouberNou/carma2
 
 The only dependency is [CBA](https://github.com/CBATeam/CBA_A3).
 
@@ -8,7 +10,7 @@ The only dependency is [CBA](https://github.com/CBATeam/CBA_A3).
 
 The concept of carma2 is to add a very low overhead, very simple object implementation in SQF. The focus is on maintaining as many paradigms with SQF as possible, so as to not create too much of a disassociation with base SQF.
 
-Implementation of objects is done in a very simple fashion that ultimately is closer to syntactic sugar than it is a "proper" object implementation, but through the help of helpers provides a robust object system. Objects are created using the `new` keyword and members and methods are accessed using the `.` operator and assigned/defined using the standard SQF `=` operator. The only major difference is that method invokation is done using `()` following the method name, instead of the standard SQF `arg call function` format (though it is entirely possible to invoke methods this way, though with some caveats). 
+Implementation of objects is done in a very simple fashion that ultimately is closer to syntactic sugar than it is a "proper" object implementation, but through the help of helpers provides a robust object system. Objects are created using the `new` keyword and members and methods are accessed using the `.` operator and assigned/defined using the standard SQF `=` operator. The only major difference is that method invocation is done using `()` following the method name, instead of the standard SQF `arg call function` format (though it is entirely possible to invoke methods this way, though with some caveats). 
 
 A simple carma2 example is below:
 ```
@@ -71,6 +73,8 @@ _anotherTestObject.myMethod = { _thisObj.__prototype.myMethod(); player sideChat
 _anotherTestObject.myMethod(); // calls myMethod on this new object, which invokes myMethod from _testObject, printing "hello world!" and then "good bye world!"
 ```
 
+An example of the output of this can be seen here: http://pastebin.com/raw.php?i=ar1y6PUV
+
 ###Chaining
 
 Chaining members is allowed if they are also objects (if they are not, undefined RPT errors may occur).
@@ -88,3 +92,9 @@ Passing an object to a SQF function or a carma2 object method can be done anonym
 [new someObject()] call some_sqf_fnc;
 _myObject.method(new subObject());
 ```
+
+## Performance
+
+A often run into drawback with object oriented systems in SQF are the overhead that objects introduce, either through their programmatic implementation or through their in engine implementation. In carma2, the language strives to be as close as possible to the engine, to minimize overhead. To do this carma2 utilizes the native `setVariable` and `getVariable` SQF functions on native SQF objects, which in this case are [locations](https://community.bistudio.com/wiki/createLocation). Locations in SQF add no apparent overhead to game performance, and are simply resident in the SQF engine's memory. As such, tens of thousands of them can be initiated with no performance impact. This is already being utilized in projects such as ACRE for implementing a fast, SQF native hash-map implementation.
+
+Because of this member variable access is a simple call to `getVariable`. Assignments are a simple call to `setVariable`. Invoking a method simply calls a wrapper function that creates the `_thisObj` special variable and then calls the arguments on a `getVariable` call. Overhead on method invocation is as little as `0.0077ms`, and default single member access is often a third of that. This provides almost native SQF level speeds.
