@@ -83,7 +83,13 @@ _var = _testObject.myMemberObject.anotherMember; // accessing a members member.
 _testObject.myMemberObject.someMethod(1,2,3); // invoking a members method.
 ```
 
-As of the time of writing, method chaining produces syntax bugs. It will be fixed before release.
+Chaining methods is also supported:
+```
+_testObject = new carma2_object();
+_testObject.hello = { player sideChat "hello"; _thisObj; };
+_testObject.world = { player sideChat "world"; _thisObj; };
+_testObject.hello().world(); // prints "hello" and then prints "world"
+```
 
 ###Anonymous Objects
 
