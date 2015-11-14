@@ -129,6 +129,73 @@ namespace carma {
 			}
 		}
 
+		void process_array_accessors(token_list &tokens_, token_entry start_entry_) {
+			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
+				if (current_token->type == carma::type::EMPTY)
+					continue;
+				if (std::next(current_token) != tokens_.end() && std::next(current_token)->val == "[") {
+					if (is_reserved_word(current_token->val))
+						continue;
+					auto array_token = current_token;
+					auto next_token = std::next(current_token);
+					if (next_token == tokens_.end())
+						continue;
+					if (next_token->val == "[") {
+						token_entry key_token = std::next(next_token);
+						uint32_t block_counter = 0;
+						if (key_token == tokens_.end())
+							continue;
+						token_list key_tokens;
+						for (key_token; key_token != tokens_.end() && (key_token->val != "]" || block_counter > 0); ++key_token) {
+							if (key_token->type == carma::type::EMPTY)
+								continue;
+							if (key_token->val == "[" || key_token->val == "{" || key_token->val == "(")
+								block_counter++;
+							if (key_token->val == "]" || key_token->val == "}" || key_token->val == ")")
+								block_counter--;
+							if (std::next(key_token) != tokens_.end() && std::next(key_token)->val == "[") {
+								process_array_accessors(tokens_, key_token);
+							}
+							key_tokens.push_back(*key_token);
+							key_token->type = carma::type::EMPTY;
+						}
+						std::string key_string = build_string(key_tokens);
+						current_token->type = carma::type::EMPTY;
+						next_token->type = carma::type::EMPTY;
+						if (std::next(key_token) != tokens_.end() && std::next(key_token)->val == "=") {
+							std::next(key_token)->type = carma::type::EMPTY;
+							token_entry value_token = std::next(key_token,2);
+							if (value_token == tokens_.end())
+								continue;
+							uint32_t block_counter = 0;
+							if (value_token == tokens_.end())
+								continue;
+							token_list value_tokens;
+							for (value_token; value_token != tokens_.end() && (value_token->val != ";" || block_counter > 0); ++value_token) {
+								if (value_token->type == carma::type::EMPTY)
+									continue;
+								if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
+									block_counter++;
+								if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
+									block_counter--;
+								if (std::next(value_token) != tokens_.end() && std::next(value_token)->val == "[") {
+									process_array_accessors(tokens_, value_token);
+								}
+								value_tokens.push_back(*value_token);
+								value_token->type = carma::type::EMPTY;
+							}
+							std::string value_string = build_string(value_tokens);
+							
+							key_token->val = array_token->val + " set [" + key_string + "," + value_string + "]";
+						}
+						else {
+							key_token->val = "(" + array_token->val + " select (" + key_string + "))";
+						}
+					}
+				}
+			}
+		}
+
 		void process_new_keyword(token_list &tokens_, token_entry start_entry_) {
 			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)

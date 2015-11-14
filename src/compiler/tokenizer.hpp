@@ -3,6 +3,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <unordered_set>
 
 namespace carma {
 	namespace type {
@@ -34,5 +35,7 @@ namespace carma {
 		typedef std::list<token, std::allocator<token>>::iterator token_entry;
 
 		token_list tokenize(std::string source_);
+		void add_reserved_word(std::string input_);
+		bool is_reserved_word(std::string input_);
 	}
 };

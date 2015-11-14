@@ -1,7 +1,10 @@
 #include "tokenizer.hpp"
+#include <regex>
 
 namespace carma {
 	namespace tokenizer {
+		std::unordered_set<std::string> reserved_words;
+
 		token_list tokenize(std::string source_) {
 			std::list<token> token_stream;
 			std::string token_str;
@@ -131,6 +134,34 @@ namespace carma {
 				}
 			}
 			return token_stream;
+		}
+
+		void add_reserved_word(std::string input_) {
+			std::regex check_binary(".+b:.+?\\s(.+?)\\s.+");
+			std::smatch matches;
+			if (std::regex_match(input_, matches, check_binary)) {
+				reserved_words.insert(matches[1]);
+			}
+			else {
+				std::regex check_unary(".+u:(.+)?\\s.+");
+				if (std::regex_match(input_, matches, check_unary)) {
+					reserved_words.insert(matches[1]);
+				}
+				else {
+					std::regex check_null(".+n:(.+)");
+					if (std::regex_match(input_, matches, check_null)) {
+						reserved_words.insert(matches[1]);
+					}
+				}
+			}
+		}
+
+		bool is_reserved_word(std::string input_) {
+			std::transform(input_.begin(), input_.end(), input_.begin(), ::tolower);
+			if (reserved_words.count(input_) > 0) {
+				return true;
+			}
+			return false;
 		}
 	}
 }
