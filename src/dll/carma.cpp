@@ -20,7 +20,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 {
 	std::string input_str = std::string(function);
 	std::string command = input_str.substr(0, 1);
-	std::string value = input_str.substr(1, input_str.length() - 1);
+	std::string value = input_str.substr(1, input_str.length());
 	uint32_t command_code = std::stoi(command);
 
 	switch (command_code) {
@@ -43,10 +43,12 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 		std::ofstream compile_file(filename.str());
 		compile_file << output_str;
 		strncpy(output, filename.str().c_str(), outputSize);
+		break;
 	}
 	case COMMAND_ADD_RESERVED_WORD: {
 		carma::tokenizer::add_reserved_word(value);
-		strncpy(output, "", outputSize);
+		strncpy(output, "0", outputSize);
+		break;
 	}
 
 	}
