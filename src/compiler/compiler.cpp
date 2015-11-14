@@ -239,16 +239,15 @@ namespace carma {
 							process_method_calls(tokens_, std::prev(value_token));
 						}
 						value_tokens.push_back(*value_token);
+						value_token->type = carma::type::EMPTY;
 					}
-
-					next_token->val = "([" + object_token->val + ",\"" + member_token->val + "\",[";
+					std::string value_string = build_string(value_tokens);
+					next_token->type = carma::type::EMPTY;
 					object_token->type = carma::type::EMPTY;
 					dot_token->type = carma::type::EMPTY;
 					member_token->type = carma::type::EMPTY;
-					token end_token;
-					end_token.type = carma::type::UNKNOWN;
-					end_token.val = "]] call carma2_fnc_methodInvoke";
-					tokens_.insert(value_token, end_token);
+					value_token->val = "([" + object_token->val + ",\"" + member_token->val + "\",[" + value_string + "]] call carma2_fnc_methodInvoke)";
+					//tokens_.insert(junk_token, end_token);
 				}
 			}
 		}
@@ -282,15 +281,13 @@ namespace carma {
 							process_new_keyword(tokens_, std::prev(value_token));
 						}
 						value_tokens.push_back(*value_token);
+						value_token->type = carma::type::EMPTY;
 					}
-
-					next_token->val = "([[";
+					std::string value_string = build_string(value_tokens);
+					next_token->type = carma::type::EMPTY;
 					object_token->type = carma::type::EMPTY;
 					current_token->type = carma::type::EMPTY;
-					token end_token;
-					end_token.type = carma::type::UNKNOWN;
-					end_token.val = "], " + object_token->val + ", __FILE__, __LINE__] call carma2_fnc_newObject";
-					tokens_.insert(value_token, end_token);
+					value_token->val = "([[" + value_string + "], " + object_token->val + ", __FILE__, __LINE__] call carma2_fnc_newObject)";
 				}
 			}
 		}
