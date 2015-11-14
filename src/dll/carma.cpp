@@ -17,10 +17,19 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 
 	std::string output_str = carma::process::process_input(input_str);
 
+	if (file_id > 0) {
+		std::stringstream old_filename;
+		old_filename << "userconfig\\carma2_tmp_";
+		old_filename << file_id;
+		old_filename << ".sqf";
+		std::remove(old_filename.str().c_str());
+	}
+
 	std::stringstream filename;
 	filename << "userconfig\\carma2_tmp_";
 	filename << file_id++;
 	filename << ".sqf";
+
 	std::ofstream compile_file(filename.str());
 	compile_file << output_str;
 	strncpy(output, filename.str().c_str(), outputSize);
