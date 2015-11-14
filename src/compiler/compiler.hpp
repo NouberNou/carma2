@@ -9,7 +9,7 @@ using namespace carma::tokenizer;
 
 namespace carma {
 	namespace compiler {
-		void process_accessors(token_list &tokens_);
+		void process_accessors(token_list &tokens_, token_entry start_entry_);
 		void process_simple_assigments(token_list &tokens_, token_entry start_entry_);
 		void process_simple_assigments(token_list &tokens_, token_entry start_entry_, uint32_t &outer_block_counter);
 		void process_method_calls(token_list &tokens_, token_entry start_entry_);

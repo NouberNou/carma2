@@ -3,11 +3,12 @@
 namespace carma {
 	namespace compiler {
 
-		void process_accessors(token_list &tokens_) {
+		void process_accessors(token_list &tokens_, token_entry start_entry_) {
 			for (token_entry current_token = tokens_.begin(); current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
 				if (std::next(current_token) != tokens_.end() && std::next(current_token)->val == ".") {
+					auto object_token = current_token;
 					auto dot_token = std::next(current_token);
 					auto member_token = std::next(current_token, 2);
 					if (member_token == tokens_.end())
@@ -16,17 +17,10 @@ namespace carma {
 					if (next_token == tokens_.end())
 						continue;
 					if ((next_token->type == carma::type::OPERATOR || next_token->type == carma::type::ENDOFSTATEMENT) && next_token->val != "=" && next_token->val != "(") {
-						std::string simple_assignment = "(" + current_token->val + " getVariable \"" + member_token->val + "\")";
-						if (next_token->val != ".") {
-							current_token->type = carma::type::EMPTY;
-							dot_token->type = carma::type::EMPTY;
-							member_token->val = simple_assignment;
-							current_token = member_token;
-						}
-						else {
-							member_token->val = simple_assignment;
-							dot_token->type = carma::type::EMPTY;
-							current_token->type = carma::type::EMPTY;
+						object_token->type = carma::type::EMPTY;
+						dot_token->type = carma::type::EMPTY;
+						member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
+						if (next_token->val == ".") {
 							current_token = dot_token;
 						}
 					}
@@ -124,6 +118,7 @@ namespace carma {
 						dot_token->type = carma::type::EMPTY;
 						member_token->type = carma::type::EMPTY;
 						value_token->val = "([" + object_token->val + ",\"" + member_token->val + "\",[" + value_string + "]] call carma2_fnc_methodInvoke)";
+						value_token->type = carma::type::METHODCALL;
 					}
 				}
 			}
@@ -133,7 +128,7 @@ namespace carma {
 			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
-				if (std::next(current_token) != tokens_.end() && std::next(current_token)->val == "[") {
+				if ((current_token->type == carma::type::LITERAL || current_token->type == carma::type::METHODCALL) && std::next(current_token) != tokens_.end() && std::next(current_token)->val == "[") {
 					if (is_reserved_word(current_token->val))
 						continue;
 					auto array_token = current_token;
