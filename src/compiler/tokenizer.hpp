@@ -21,7 +21,11 @@ namespace carma {
 			CODEBLOCK,
 			ARRAY,
 			EMPTY,
-			METHODCALL
+			METHODCALL,
+			MEMBERACCESSOR,
+			ARRAYACCESSOR,
+			ASSIGNMENTOPARRAY,
+			ASSIGNMENTOPMEMBER
 		};
 	};
 
@@ -38,5 +42,7 @@ namespace carma {
 		token_list tokenize(std::string source_);
 		void add_reserved_word(std::string input_);
 		bool is_reserved_word(std::string input_);
+
+		void clean_token_list(token_list &tokens_);
 	}
 };

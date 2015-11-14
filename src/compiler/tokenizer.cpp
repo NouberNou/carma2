@@ -163,5 +163,15 @@ namespace carma {
 			}
 			return false;
 		}
+
+		void clean_token_list(token_list &tokens_) {
+			token_list clean_tokens;
+			for (token_entry current_token = tokens_.begin(); current_token != tokens_.end(); ++current_token) {
+				if (current_token->type == type::EMPTY)
+					continue;
+				clean_tokens.push_back(*current_token);
+			}
+			tokens_ = clean_tokens;
+		}
 	}
 }
