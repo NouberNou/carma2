@@ -26,9 +26,6 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 	strncpy(output, filename.str().c_str(), outputSize);
 }
 
-
-
-
 void Init(void) {
 	file_id = 0;
 }
