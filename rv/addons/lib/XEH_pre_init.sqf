@@ -1,33 +1,41 @@
+#include "carma.hpp"
+
 carma2_createdObjects = [];
 carma2_objectIdCounter = 0;
-carma2_creationArgs = [];
-carma2_creationCounter = 0;
+carma2_criticalArgs = [];
+carma2_criticalCounter = 0;
 
 deleteLocation carma2_object;
 carma2_object = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
 carma2_object setText "carma2_obj";
 
 carma2_object setVariable ["__id", -1];
-carma2_object setVariable ["__file", -1];
-carma2_object setVariable ["__line", -1];
+carma2_object setVariable ["__handles", []];
 carma2_object setVariable ["__prototype", objNull];
 
+#define CRITICAL_PARAMS   params ["_counter"]; (carma2_criticalArgs select _counter) params 
+#define CRITICAL_SETRETURN(val) carma2_criticalArgs set[_counter, val]
+
+carma2_fnc_callCritical = {
+    params ["_args", "_function"];
+    private ["_return", "_counter"];
+    _counter = carma2_criticalCounter;
+    carma2_criticalCounter = carma2_criticalCounter + 1;
+    carma2_criticalArgs set[_counter, _args];
+    format["[%1] call %2; false;", _counter, _function] configClasses (configfile >> "CarmaBlank");
+    _return = carma2_criticalArgs select _counter;
+    carma2_criticalCounter = carma2_criticalCounter - 1;
+    _return;
+};
+
 carma2_fnc_newObject = {
-    private ["_newObj", "_counter", "_newObj"];
-    _counter = carma2_creationCounter;
-    carma2_creationCounter = carma2_creationCounter + 1;
-    carma2_creationArgs set[_counter, _this];
-    format["[%1] call carma2_fnc_newObjectInternal; false;", _counter] configClasses (configfile >> "CarmaBlank");
-    _newObj = carma2_creationArgs select _counter;
-    carma2_creationCounter = carma2_creationCounter - 1;
-    _newObj;
+    [_this, "carma2_fnc_newObjectInternal"] call carma2_fnc_callCritical;
 };
 
 
 carma2_fnc_newObjectInternal = {
-    params ["_counter"];
-    (carma2_creationArgs select _counter) params ["_args", "_type", "_file", "_line"];
-    private ["_newObj", "_constructor", "_key", "_val", "_thisObj"];
+    CRITICAL_PARAMS ["_args", "_type", "_scriptHandle"];
+    private ["_newObj", "_constructor", "_key", "_val", "_thisObj", "_handles"];
     _newObj = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
     _newObj setText "carma2_obj";
     {
@@ -39,8 +47,9 @@ carma2_fnc_newObjectInternal = {
         _newObj setVariable [_key, _val];
     } forEach (allVariables _type);
     _newObj setVariable ["__id", carma2_objectIdCounter];
-    _newObj setVariable ["__file", _file];
-    _newObj setVariable ["__line", _line];
+    _handles = [];
+    _handles pushBack _scriptHandle;
+    _newObj setVariable ["__handles", _handles];
     _newObj setVariable ["__prototype", _type];
     carma2_objectIdCounter = carma2_objectIdCounter + 1;
     _constructor = _newObj getVariable "__init";
@@ -49,7 +58,7 @@ carma2_fnc_newObjectInternal = {
         _args call _constructor;
     };
     carma2_createdObjects pushBack _newObj;
-    carma2_creationArgs set[_counter, _newObj];
+    CRITICAL_SETRETURN(_newObj);
 };
 
 carma2_fnc_delObject = {
@@ -73,6 +82,36 @@ carma2_fnc_compile = {
         [] call _result;
     };
     _result;
+};
+
+carma2_fnc_spawnWrapper = {
+    [_this, "carma2_fnc_spawnWrapperInternal"] call carma2_fnc_callCritical;
+};
+
+carma2_fnc_spawnWrapperInternal = {
+    CRITICAL_PARAMS ["_args", "_func"];
+    private ["_handle"];
+    _handle = _args spawn _func;
+    _arraySearch = {
+        {
+            if(IS_CARMAOBJECT(_x)) then {
+                (_x getVariable "__handles") pushBack _handle;
+            } else {
+                if(typeName _x == "ARRAY") then {
+                    _x call _arraySearch;
+                };
+            };
+        } forEach _this;
+    };
+    if(IS_CARMAOBJECT(_args)) then {
+        player sideChat format["pushback: %1", _handle];
+        (_args getVariable "__handles") pushBack _handle;
+    } else {
+        if(typeName _args == "ARRAY") then {
+            _args call _arraySearch;
+        };
+    };
+    CRITICAL_SETRETURN(_handle);
 };
 
 {
