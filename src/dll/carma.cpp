@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
-#include "compiler\compiler.hpp"
+#include "compiler\process.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -15,20 +15,14 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 {
 	std::string input_str = std::string(function);
 
-	carma::token_list tokens = carma::tokenize(input_str);
-	
-	carma::process_accessors(tokens);
-	uint32_t dummy_block_counter = 0;
-	carma::process_simple_assigments(tokens, tokens.begin(), dummy_block_counter);
-	carma::process_method_calls(tokens, tokens.begin());
-	carma::process_new_keyword(tokens, tokens.begin());
-	carma::process_del_keyword(tokens, tokens.begin());
+	std::string output_str = carma::process::process_input(input_str);
+
 	std::stringstream filename;
 	filename << "userconfig\\carma2_tmp_";
 	filename << file_id++;
 	filename << ".sqf";
 	std::ofstream compile_file(filename.str());
-	compile_file << carma::build_string(tokens);
+	compile_file << output_str;
 	strncpy(output, filename.str().c_str(), outputSize);
 }
 

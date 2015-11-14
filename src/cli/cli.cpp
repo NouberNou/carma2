@@ -5,7 +5,13 @@
 #include <fstream>
 #include <sstream>
 
+#include "compiler\tokenizer.hpp"
 #include "compiler\compiler.hpp"
+#include "compiler\process.hpp"
+
+
+using namespace carma::tokenizer;
+using namespace carma::compiler;
 
 namespace carma {
 	namespace cli {
@@ -46,22 +52,14 @@ int main(int argc, char **argv) {
 	}
 	std::string input_str((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 
-	carma::token_list tokens = carma::tokenize(input_str);
+	std::string output = carma::process::process_input(input_str);
 
-	carma::process_accessors(tokens);
-	uint32_t dummy_block_counter = 0;
-	carma::process_simple_assigments(tokens, tokens.begin(), dummy_block_counter);
-	carma::process_method_calls(tokens, tokens.begin());
-	tokens = carma::tokenize(carma::build_string(tokens));
-	carma::process_new_keyword(tokens, tokens.begin());
-	tokens = carma::tokenize(carma::build_string(tokens));
-	carma::process_del_keyword(tokens, tokens.begin());
 	std::ofstream compile_file(output_filename);
-	if (!input_file.is_open()) {
+	if (!compile_file.is_open()) {
 		std::cout << "Error: Cannot open output file \"" << input_filename << "\n";
 		return 1;
 	}
-	compile_file << carma::build_string(tokens);
+	compile_file << output;
 
 	return 0;
 }
