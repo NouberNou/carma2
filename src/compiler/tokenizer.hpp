@@ -20,7 +20,8 @@ namespace carma {
 			ENDOFSTATEMENT,
 			CODEBLOCK,
 			ARRAY,
-			EMPTY
+			EMPTY,
+			METHODCALL
 		};
 	};
 
