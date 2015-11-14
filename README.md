@@ -99,6 +99,36 @@ Passing an object to a SQF function or a carma2 object method can be done anonym
 _myObject.method(new subObject());
 ```
 
+###Array [] Accessors
+
+Arrays can now be accessed and manipulated via the more traditional `[]` operator as in other languages.
+
+```
+_testObject = new carma2_object();
+
+_testObject.myArray = [1,2,3];
+player sideChat format["_testObject.myArray[0] = %1", _testObject.myArray[0]]; // access via the [] operator
+
+_testObject.myArray[0] = 2; // assign via the [] operator.
+player sideChat format["_testObject.myArray[0] = %1", _testObject.myArray[0]];
+
+_testObject.getArray = {
+    _thisObj.myArray;
+};
+_testObject.getArray()[0] = 3; // assign via reference return.
+
+player sideChat format["_testObject.myArray[0] = %1", _testObject.getArray()[0]]; //access via reference return
+```
+
+Arrays on their own can be accessed via the `[]` operator as well.
+
+```
+_testArray = [1,2,3];
+player sideChat format["Test array: %1", _testArray[1]];
+_testArray[1] = 48;
+player sideChat format["Test array: %1", _testArray[1]];
+```
+
 ## Performance
 
 A often run into drawback with object oriented systems in SQF are the overhead that objects introduce, either through their programmatic implementation or through their in engine implementation. In carma2, the language strives to be as close as possible to the engine, to minimize overhead. To do this carma2 utilizes the native `setVariable` and `getVariable` SQF functions on native SQF objects, which in this case are [locations](https://community.bistudio.com/wiki/createLocation). Locations in SQF add no apparent overhead to game performance, and are simply resident in the SQF engine's memory. As such, tens of thousands of them can be initiated with no performance impact. This is already being utilized in projects such as ACRE for implementing a fast, SQF native hash-map implementation.
