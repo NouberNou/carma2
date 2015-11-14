@@ -66,6 +66,7 @@ carma2_fnc_compile = {
     params ["_file", ["_execute", true]];
     private ["_result"];
     _text = preprocessFile _file;
+    _text = "1" + _text;
     _result = "carma_dll" callExtension _text;
     _result = (compile preprocessFileLineNumbers _result);
     if(_execute) then {
@@ -73,3 +74,7 @@ carma2_fnc_compile = {
     };
     _result;
 };
+
+{
+    "carma_dll" callExtension ("0" + _x);
+} forEach (supportInfo "");
