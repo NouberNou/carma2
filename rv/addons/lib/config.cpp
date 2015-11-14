@@ -20,3 +20,17 @@ class CarmaBlank {
         val = 1;
     };
 };
+
+class CfgLocationTypes {
+    class CarmaType {
+        color[] = {0,0,0,0};
+        drawStyle = "carma";
+        font = "PuristaMedium";
+        importance = 5;
+        name = "carma";
+        shadow = 0;
+        size = 0;
+        textSize = 0.0;
+        texture = "";
+    };
+};

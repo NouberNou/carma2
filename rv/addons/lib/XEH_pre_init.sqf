@@ -4,7 +4,7 @@ carma2_creationArgs = [];
 carma2_creationCounter = 0;
 
 deleteLocation carma2_object;
-carma2_object = createLocation ["NameVillage", [-10000,-10000,-10000], 0, 0];
+carma2_object = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
 carma2_object setText "carma2_obj";
 
 carma2_object setVariable ["__id", -1];
@@ -28,7 +28,7 @@ carma2_fnc_newObjectInternal = {
     params ["_counter"];
     (carma2_creationArgs select _counter) params ["_args", "_type", "_file", "_line"];
     private ["_newObj", "_constructor", "_key", "_val", "_thisObj"];
-    _newObj = createLocation ["NameVillage", [-10000,-10000,-10000], 0, 0];
+    _newObj = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
     _newObj setText "carma2_obj";
     {
         _key = _x;
