@@ -103,12 +103,13 @@ namespace carma {
 				}
 
 				if (std::next(current_token) != end_entry_ && (
-					std::next(current_token)->val == "." || 
+					std::next(current_token)->val == "." ||
+					std::next(current_token)->val == "::" ||
 					std::next(current_token)->val == "[" || 
 					std::next(current_token)->val == "(" ||
 					std::next(current_token)->val == "{" 
 					)) {
-					if (std::next(current_token)->val == ".") {
+					if (std::next(current_token)->val == "." || std::next(current_token)->val == "::") {
 						auto object_token = current_token;
 						auto dot_token = std::next(current_token);
 						auto member_token = std::next(current_token, 2);
@@ -119,7 +120,12 @@ namespace carma {
 							object_token->type = carma::type::EMPTY;
 							dot_token->type = carma::type::EMPTY;
 							member_token->type = carma::type::MEMBERACCESSOR;
-							member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
+							if (dot_token->val == ".") {
+								member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
+							}
+							else {
+								member_token->val = "((" + object_token->val + " getVariable \"__prototype\") getVariable \"" + member_token->val + "\")";
+							}
 							current_token = --member_token;
 						}
 						else if (following_token->val == "=") {
@@ -148,7 +154,12 @@ namespace carma {
 							following_token->type = carma::type::EMPTY;
 							--val_token_end;
 							val_token_end->type = carma::type::ARRAYACCESSOR;
-							val_token_end->val = "(" + object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "])";
+							if (dot_token->val == ".") {
+								val_token_end->val = "(" + object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "])";
+							}
+							else {
+								val_token_end->val = "((" + object_token->val + " getVariable \"__prototype\") setVariable [\"" + member_token->val + "\", " + val_string + "])";
+							}
 							current_token = val_token_end;
 						}
 						else if (following_token->val == "(") {
