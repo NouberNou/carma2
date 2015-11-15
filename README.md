@@ -129,6 +129,15 @@ _testArray[1] = 48;
 player sideChat format["Test array: %1", _testArray[1]];
 ```
 
+###Traditional Function Calling
+
+You can call any SQF defined function the same as you would in most languages using parenthesis.
+
+```
+my_func = { player sideChat format["this: %1", _this]; };
+my_func(1,2,3); // prints "this: [1,2,3]"
+```
+
 ## Performance
 
 A often run into drawback with object oriented systems in SQF are the overhead that objects introduce, either through their programmatic implementation or through their in engine implementation. In carma2, the language strives to be as close as possible to the engine, to minimize overhead. To do this carma2 utilizes the native `setVariable` and `getVariable` SQF functions on native SQF objects, which in this case are [locations](https://community.bistudio.com/wiki/createLocation). Locations in SQF add no apparent overhead to game performance, and are simply resident in the SQF engine's memory. As such, tens of thousands of them can be initiated with no performance impact. This is already being utilized in projects such as ACRE for implementing a fast, SQF native hash-map implementation.
