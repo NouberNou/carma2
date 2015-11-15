@@ -7,249 +7,288 @@ namespace carma {
 			for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
-				if (std::next(current_token) != end_entry_ && (std::next(current_token)->val == "." || std::next(current_token)->val == "[")) {
-					if (is_reserved_word(current_token->val))
+				if (current_token->val == "new") {
+					auto object_token = std::next(current_token);
+					if (object_token == tokens_.end())
 						continue;
-					auto object_token = current_token;
-					auto dot_token = std::next(current_token);
-					
-					if (dot_token->val == ".") {
+					if (object_token->type == carma::type::LITERAL) {
+						uint32_t block_counter = 0;
+						auto obj_token_end = object_token;
+						if (obj_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging ( operator.
+
+						auto obj_token_start = obj_token_end;
+
+						for (obj_token_end; obj_token_end != end_entry_ && (obj_token_end->val != "(" || block_counter > 0); ++obj_token_end) {
+							if (obj_token_end->type == carma::type::EMPTY)
+								continue;
+							if (obj_token_end->val == "[" || obj_token_end->val == "{" || obj_token_end->val == "(")
+								block_counter++;
+							if (obj_token_end->val == "]" || obj_token_end->val == "}" || obj_token_end->val == ")")
+								block_counter--;
+						}
+
+						process_accessors(tokens_, obj_token_start, obj_token_end);
+						std::string obj_string = build_string(tokens_, obj_token_start, obj_token_end);
+						for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
+
+						auto arg_token_end = std::next(obj_token_end);
+						if (arg_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging ( operator.
+
+						auto arg_token_start = arg_token_end;
+
+						for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != ")" || block_counter > 0); ++arg_token_end) {
+							if (arg_token_end->type == carma::type::EMPTY)
+								continue;
+							if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
+								block_counter++;
+							if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
+								block_counter--;
+						}
+
+						process_accessors(tokens_, arg_token_start, arg_token_end);
+						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
+						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
+						obj_token_end->type = carma::type::EMPTY;
+						arg_token_start->type = carma::type::EMPTY;
+						object_token->type = carma::type::EMPTY;
+						current_token->type = carma::type::EMPTY;
+						arg_token_end->type = carma::type::FUNCTIONCALL;
+						arg_token_end->val = "([[" + arg_string + "], " + obj_string + ", _thisScript] call carma2_fnc_newObject)";
+						current_token = --arg_token_end;
+					}
+					continue;
+				}
+
+				if (current_token->val == "del") {
+					auto object_token = std::next(current_token);
+					if (object_token == tokens_.end())
+						continue;
+					if (object_token->type == carma::type::LITERAL) {
+						uint32_t block_counter = 0;
+						auto obj_token_end = object_token;
+						if (obj_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging ( operator.
+
+						auto obj_token_start = obj_token_end;
+
+						for (obj_token_end; obj_token_end != end_entry_ && (obj_token_end->val != ";" || block_counter > 0); ++obj_token_end) {
+							if (obj_token_end->type == carma::type::EMPTY)
+								continue;
+							if (obj_token_end->val == "[" || obj_token_end->val == "{" || obj_token_end->val == "(")
+								block_counter++;
+							if (obj_token_end->val == "]" || obj_token_end->val == "}" || obj_token_end->val == ")")
+								block_counter--;
+						}
+
+						process_accessors(tokens_, obj_token_start, obj_token_end);
+						std::string obj_string = build_string(tokens_, obj_token_start, obj_token_end);
+						for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
+
+						object_token->type = carma::type::EMPTY;
+						current_token->type = carma::type::EMPTY;
+						--obj_token_end;
+						obj_token_end->type = carma::type::UNKNOWN;
+						obj_token_end->val = "([" + obj_string + "] call carma2_fnc_delObject)";
+						current_token = obj_token_end;
+					}
+					continue;
+				}
+
+				if (std::next(current_token) != end_entry_ && (std::next(current_token)->val == "." || std::next(current_token)->val == "[" || std::next(current_token)->val == "(")) {
+					if (std::next(current_token)->val == ".") {
+						auto object_token = current_token;
+						auto dot_token = std::next(current_token);
 						auto member_token = std::next(current_token, 2);
 						if (member_token == end_entry_)
-							continue;
-						auto next_token = std::next(current_token, 3);
-						if (next_token == end_entry_)
-							continue;
-
-						if (next_token->val != "." && next_token->val != "=" && next_token->val != "(" && next_token->val != "[") {
+							continue; // @TODO: this should be a syntax error, hanging . operator.
+						auto following_token = std::next(current_token, 3);
+						if((following_token == end_entry_ || following_token->val != "(") && following_token->val != "=") {
 							object_token->type = carma::type::EMPTY;
 							dot_token->type = carma::type::EMPTY;
+							member_token->type = carma::type::MEMBERACCESSOR;
 							member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
+							current_token = --member_token;
 						}
-						else {
-							if (next_token->val == "." || next_token->val == "[") {
-								object_token->type = carma::type::EMPTY;
-								dot_token->type = carma::type::EMPTY;
-								member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
-								member_token->type = carma::type::MEMBERACCESSOR;
-								current_token = dot_token;
-							}
-							else if (next_token->val == "(") {
-								process_method_calls(tokens_, object_token);
-								object_token->type = carma::type::EMPTY;
-							}
-						}
-					}
-					else if (dot_token->val == "[") {
-						token_entry value_token = std::next(dot_token);
-						if (value_token == end_entry_)
-							continue;
-						uint32_t block_counter = 0;
-						
-						for (value_token; value_token != end_entry_ && (value_token->val != "]" || block_counter > 0); ++value_token) {
-							if (value_token->type == carma::type::EMPTY)
-								continue;
-							if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
-								block_counter++;
-							if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
-								block_counter--;
-						};
-						auto block_end = value_token;
-						auto next_token = std::next(value_token);
-						if (next_token == end_entry_)
-							continue;
-						if (next_token->val == "=")
-							continue;
+						else if (following_token->val == "=") {
+							auto val_token_end = std::next(following_token);
+							if (val_token_end == end_entry_)
+								continue; // @TODO: this should be a syntax error, hanging = operator.
 
-						block_counter = 0;
-						token_list value_tokens;
-						value_token = std::next(dot_token);
-						for (value_token; value_token != end_entry_ && (value_token->val != "]" || block_counter > 0); ++value_token) {
-							if (value_token->type == carma::type::EMPTY)
-								continue;
-							if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
-								block_counter++;
-							if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
-								block_counter--;
-							if (value_token->val == "[") {
-								process_accessors(tokens_, value_token, block_end);
-							}
-							else if (std::next(value_token)->val == ".") {
-								process_accessors(tokens_, value_token, block_end);
-							}
-							else {
-								value_tokens.push_back(*value_token);
-							}
-							value_token->type = carma::type::EMPTY;
-						}
-						std::string value_string = build_string(value_tokens);
-						dot_token->type = carma::type::EMPTY;
-						current_token->type = carma::type::EMPTY;
-						object_token->type = carma::type::EMPTY;
-						value_token->val = "(" + object_token->val + " select " + value_string + ")";
-						value_token->type = carma::type::ARRAYACCESSOR;
-					}
-				}
-			}
-		}
-
-		void process_array_accessors(token_list &tokens_, token_entry start_entry_) {
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
-				if (current_token->type == carma::type::EMPTY)
-					continue;
-				
-			}
-		}
-
-		void process_simple_assigments(token_list &tokens_, token_entry start_entry_) {
-			uint32_t dummy_block_counter = 0;
-			process_simple_assigments(tokens_, start_entry_, tokens_.end());
-		}
-
-
-		void process_simple_assigments(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
-				if (current_token->type == carma::type::EMPTY)
-					continue;
-				if (std::next(current_token) != tokens_.end() && (std::next(current_token)->val == "." || std::next(current_token)->val == "[")) {
-					auto object_token = current_token;
-					auto dot_token = std::next(current_token);
-					if (dot_token->val == ".") {
-						auto member_token = std::next(current_token, 2);
-						if (member_token == tokens_.end())
-							continue;
-						auto next_token = std::next(current_token, 3);
-						if (next_token == tokens_.end())
-							continue;
-						if (next_token->val == "=") {
-							token_entry value_token = std::next(next_token);
+							auto val_token_start = val_token_end;
 							uint32_t block_counter = 0;
-							if (value_token == tokens_.end())
-								continue;
-							token_list value_tokens;
-							for (value_token; value_token != tokens_.end() && (value_token->val != ";" || block_counter > 0); ++value_token) {
-								if (value_token->type == carma::type::EMPTY)
+							for (val_token_end; val_token_end != end_entry_ && (val_token_end->val != ";" || block_counter > 0); ++val_token_end) {
+								if (val_token_end->type == carma::type::EMPTY)
 									continue;
-								if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
+								if (val_token_end->val == "[" || val_token_end->val == "{" || val_token_end->val == "(")
 									block_counter++;
-								if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
+								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
 									block_counter--;
-								if (value_token->val == ".") {
-									process_simple_assigments(tokens_, std::prev(value_token));
-								}
-								value_tokens.push_back(*value_token);
-								value_token->type = carma::type::EMPTY;
 							}
-							std::string val_string = build_string(value_tokens);
-							next_token->type = carma::type::EMPTY;
+							process_accessors(tokens_, val_token_start, val_token_end);
+							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
+							for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
+								clear_token->type = carma::type::EMPTY;
+							}
 							object_token->type = carma::type::EMPTY;
 							dot_token->type = carma::type::EMPTY;
 							member_token->type = carma::type::EMPTY;
-							token end_token;
-							end_token.type = carma::type::ASSIGNMENTOPMEMBER;
-							end_token.val = object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "]";
-							tokens_.insert(value_token, end_token);
+							following_token->type = carma::type::EMPTY;
+							--val_token_end;
+							val_token_end->type = carma::type::ARRAYACCESSOR;
+							val_token_end->val = "(" + object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "])";
+							current_token = val_token_end;
 						}
-					}
-					else if (dot_token->val == "[") {
-						token_entry key_token = std::next(dot_token);
-						uint32_t block_counter = 0;
-						if (key_token == tokens_.end())
-							continue;
-						token_list key_tokens;
-						for (key_token; key_token != tokens_.end() && (key_token->val != "]" || block_counter > 0); ++key_token) {
-							if (key_token->type == carma::type::EMPTY)
-								continue;
-							if (key_token->val == "[" || key_token->val == "{" || key_token->val == "(")
-								block_counter++;
-							if (key_token->val == "]" || key_token->val == "}" || key_token->val == ")")
-								block_counter--;
-							key_tokens.push_back(*key_token);
-							key_token->type = carma::type::EMPTY;
-						}
-						std::string key_string = build_string(key_tokens);
-						token_entry next_token = std::next(key_token);
-						block_counter = 0;
-						if (next_token == tokens_.end())
-							continue;
-						if (next_token->val != "=")
-							continue;
+						else if (following_token->val == "(") {
+							uint32_t block_counter = 0;
 
-						token_entry val_token = std::next(next_token);
-						if (val_token == tokens_.end())
-							continue;
-						token_list val_tokens;
-						for (val_token; val_token != tokens_.end() && (val_token->val != ";" || block_counter > 0); ++val_token) {
-							if (val_token->type == carma::type::EMPTY)
-								continue;
-							if (val_token->val == "[" || val_token->val == "{" || val_token->val == "(")
-								block_counter++;
-							if (val_token->val == "]" || val_token->val == "}" || val_token->val == ")")
-								block_counter--;
-							val_tokens.push_back(*val_token);
-							val_token->type = carma::type::EMPTY;
-						}
-						key_token->type = carma::type::EMPTY;
-						std::string val_string = build_string(val_tokens);
-						next_token->type = carma::type::EMPTY;
-						dot_token->type = carma::type::EMPTY;
-						object_token->type = carma::type::EMPTY;
-						token end_token;
-						end_token.type = carma::type::ASSIGNMENTOPARRAY;
-						end_token.val = object_token->val + " set[" + key_string + "," + val_string + "]";
-						tokens_.insert(val_token, end_token);
-					}
-				}
-			}
-		}
+							auto arg_token_end = std::next(following_token);
+							if (arg_token_end == end_entry_)
+								continue; // @TODO: this should be a syntax error, hanging [ operator.
 
-		void process_method_calls(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
-				if (current_token->type == carma::type::EMPTY)
-					continue;
-				if (std::next(current_token) != tokens_.end() && std::next(current_token)->val == "." || current_token->type == carma::type::MEMBERACCESSOR) {
-					auto object_token = current_token;
-					auto dot_token = std::next(current_token);
-					auto member_token = std::next(current_token, 2);
-					auto next_token = std::next(current_token, 3);
-					if (member_token == tokens_.end())
-						continue;
-					if (next_token == tokens_.end())
-						continue;
-					if (next_token->val == "(") {
-						token_entry value_token = std::next(next_token);
-						uint32_t block_counter = 0;
-						if (value_token == tokens_.end())
-							continue;
-						token_list value_tokens;
-						for (value_token; value_token != tokens_.end() && (value_token->val != ")" || block_counter > 0); ++value_token) {
-							if (value_token->type == carma::type::EMPTY)
-								continue;
-							if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
-								block_counter++;
-							if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
-								block_counter--;
-							if (value_token->val == ".") {
-								process_method_calls(tokens_, std::prev(value_token));
+							auto arg_token_start = arg_token_end;
+
+							for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != ")" || block_counter > 0); ++arg_token_end) {
+								if (arg_token_end->type == carma::type::EMPTY)
+									continue;
+								if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
+									block_counter++;
+								if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
+									block_counter--;
 							}
-							value_tokens.push_back(*value_token);
-							value_token->type = carma::type::EMPTY;
+
+
+							process_accessors(tokens_, arg_token_start, arg_token_end);
+							std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
+							for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
+								clear_token->type = carma::type::EMPTY;
+							}
+							object_token->type = carma::type::EMPTY;
+							dot_token->type = carma::type::EMPTY;
+							member_token->type = carma::type::EMPTY;
+							following_token->type = carma::type::EMPTY;
+							arg_token_end->type = carma::type::METHODCALL;
+							arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+							current_token = --arg_token_end;
+
 						}
-						std::string value_string = build_string(value_tokens);
-						next_token->type = carma::type::EMPTY;
+					}
+					else if (std::next(current_token)->val == "[") {
+						if (is_reserved_word(current_token->val))
+							continue;
+						auto object_token = current_token;
+						auto bracket_token = std::next(current_token);
+						uint32_t block_counter = 0;
+
+						auto arg_token_end = std::next(current_token, 2);
+						if (arg_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging [ operator.
+
+						auto arg_token_start = arg_token_end;
+
+						for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != "]" || block_counter > 0); ++arg_token_end) {
+							if (arg_token_end->type == carma::type::EMPTY)
+								continue;
+							if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
+								block_counter++;
+							if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
+								block_counter--;
+						}
+						
+						
+						process_accessors(tokens_, arg_token_start, arg_token_end);
+						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
+						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
 						object_token->type = carma::type::EMPTY;
-						dot_token->type = carma::type::EMPTY;
-						member_token->type = carma::type::EMPTY;
-						value_token->val = "([" + object_token->val + ",\"" + member_token->val + "\",[" + value_string + "]] call carma2_fnc_methodInvoke)";
-						value_token->type = carma::type::METHODCALL;
+						bracket_token->type = carma::type::EMPTY;
+						
+
+						auto following_token = std::next(arg_token_end);
+						bool is_assignment = false;
+						if (following_token != end_entry_ && following_token->val == "=") {
+							is_assignment = true;
+						}
+
+						if (!is_assignment) {
+							arg_token_end->type = carma::type::ARRAYACCESSOR;
+							arg_token_end->val = "(" + object_token->val + " select " + arg_string + ")";
+							current_token = --arg_token_end;
+						}
+						else {
+							auto val_token_end = std::next(following_token);
+							if (val_token_end == end_entry_)
+								continue; // @TODO: this should be a syntax error, hanging = operator.
+
+							auto val_token_start = val_token_end;
+							block_counter = 0;
+							for (val_token_end; val_token_end != end_entry_ && (val_token_end->val != ";" || block_counter > 0); ++val_token_end) {
+								if (val_token_end->type == carma::type::EMPTY)
+									continue;
+								if (val_token_end->val == "[" || val_token_end->val == "{" || val_token_end->val == "(")
+									block_counter++;
+								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
+									block_counter--;
+							}
+							process_accessors(tokens_, val_token_start, val_token_end);
+							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
+							for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
+								clear_token->type = carma::type::EMPTY;
+							}
+							arg_token_end->type = carma::type::EMPTY;
+							following_token->type = carma::type::EMPTY;
+							--val_token_end;
+							val_token_end->type = carma::type::ARRAYACCESSOR;
+							val_token_end->val = "(" + object_token->val + " set [" + arg_string + ", " + val_string + "])";
+							current_token = val_token_end;
+						}
+					}
+					else if (std::next(current_token)->val == "(") {
+						uint32_t block_counter = 0;
+						auto function_token = current_token;
+						if (is_reserved_word(function_token->val))
+							continue;
+						auto paren_token = std::next(current_token);
+						auto arg_token_end = std::next(current_token,2);
+						if (arg_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging [ operator.
+
+						auto arg_token_start = arg_token_end;
+
+						for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != ")" || block_counter > 0); ++arg_token_end) {
+							if (arg_token_end->type == carma::type::EMPTY)
+								continue;
+							if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
+								block_counter++;
+							if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
+								block_counter--;
+						}
+
+
+						process_accessors(tokens_, arg_token_start, arg_token_end);
+						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
+						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
+						function_token->type = carma::type::EMPTY;
+						paren_token->type = carma::type::EMPTY;
+						arg_token_end->type = carma::type::FUNCTIONCALL;
+						arg_token_end->val = "([" + arg_string + "] call " + function_token->val + ")";
+						current_token = --arg_token_end;
 					}
 				}
 			}
 		}
 
-		
-
-		void process_new_keyword(token_list &tokens_, token_entry start_entry_) {
+		void process_new_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
 			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
@@ -261,36 +300,41 @@ namespace carma {
 					if (next_token == tokens_.end())
 						continue;
 					if (next_token->val == "(") {
-						token_entry value_token = std::next(next_token);
 						uint32_t block_counter = 0;
-						if (value_token == tokens_.end())
-							continue;
-						token_list value_tokens;
-						for (value_token; value_token != tokens_.end() && (value_token->val != ")" || block_counter > 0); ++value_token) {
-							if (value_token->type == carma::type::EMPTY)
+						auto arg_token_end = std::next(next_token);
+						if (arg_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging ( operator.
+
+						auto arg_token_start = arg_token_end;
+
+						for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != ")" || block_counter > 0); ++arg_token_end) {
+							if (arg_token_end->type == carma::type::EMPTY)
 								continue;
-							if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
+							if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
 								block_counter++;
-							if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
+							if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
 								block_counter--;
-							if (value_token->val == ".") {
-								process_new_keyword(tokens_, std::prev(value_token));
-							}
-							value_tokens.push_back(*value_token);
-							value_token->type = carma::type::EMPTY;
 						}
-						std::string value_string = build_string(value_tokens);
-						next_token->type = carma::type::EMPTY;
+
+
+						process_new_keyword(tokens_, arg_token_start, arg_token_end);
+						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
+						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
 						object_token->type = carma::type::EMPTY;
+						next_token->type = carma::type::EMPTY;
 						current_token->type = carma::type::EMPTY;
-						value_token->val = "([[" + value_string + "], " + object_token->val + ", _thisScript] call carma2_fnc_newObject)";
+						arg_token_end->type = carma::type::FUNCTIONCALL;
+						arg_token_end->val = "([[" + arg_string + "], " + object_token->val + ", _thisScript] call carma2_fnc_newObject)";
+						current_token = --arg_token_end;
 					}
 				}
 			}
 		}
 
-		void process_spawn_keyword(token_list &tokens_, token_entry start_entry_) {
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
+		void process_spawn_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
+			/*for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
 				if (current_token->val == "spawn") {
@@ -317,10 +361,11 @@ namespace carma {
 					std::prev(value_token)->type = carma::type::UNKNOWN;	
 					std::prev(value_token)->val = " call { [_this, " + value_string + "] call carma2_fnc_spawnWrapper; }";
 				}
-			}
+			}*/
 		}
 
-		void process_del_keyword(token_list &tokens_, token_entry start_entry_) {
+		void process_del_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
+			/*
 			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
@@ -337,11 +382,12 @@ namespace carma {
 					}
 				}
 			}
+			*/
 		}
 
-		std::string build_string(const token_list &tokens_) {
+		std::string build_string(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_) {
 			std::string output = "";
-			for (auto current_token = tokens_.begin(); current_token != tokens_.end(); ++current_token) {
+			for (auto current_token = start_entry_; current_token != end_entry_; ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
 				output += current_token->val;
