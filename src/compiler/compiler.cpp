@@ -102,7 +102,12 @@ namespace carma {
 					continue;
 				}
 
-				if (std::next(current_token) != end_entry_ && (std::next(current_token)->val == "." || std::next(current_token)->val == "[" || std::next(current_token)->val == "(")) {
+				if (std::next(current_token) != end_entry_ && (
+					std::next(current_token)->val == "." || 
+					std::next(current_token)->val == "[" || 
+					std::next(current_token)->val == "(" ||
+					std::next(current_token)->val == "{" 
+					)) {
 					if (std::next(current_token)->val == ".") {
 						auto object_token = current_token;
 						auto dot_token = std::next(current_token);
@@ -248,6 +253,82 @@ namespace carma {
 							--val_token_end;
 							val_token_end->type = carma::type::ARRAYACCESSOR;
 							val_token_end->val = "(" + object_token->val + " set [" + arg_string + ", " + val_string + "])";
+							current_token = val_token_end;
+						}
+					}
+					else if (std::next(current_token)->val == "{") {
+						if (current_token->type != carma::type::LITERAL && 
+							current_token->type != carma::type::ARRAYACCESSOR && 
+							current_token->type != carma::type::MEMBERACCESSOR &&
+							current_token->type != carma::type::METHODCALL)
+							continue;
+						if (is_reserved_word(current_token->val))
+							continue;
+						auto object_token = current_token;
+						auto bracket_token = std::next(current_token);
+						uint32_t block_counter = 0;
+
+						auto arg_token_end = std::next(current_token, 2);
+						if (arg_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging [ operator.
+
+						auto arg_token_start = arg_token_end;
+
+						for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != "}" || block_counter > 0); ++arg_token_end) {
+							if (arg_token_end->type == carma::type::EMPTY)
+								continue;
+							if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
+								block_counter++;
+							if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
+								block_counter--;
+						}
+
+
+						process_accessors(tokens_, arg_token_start, arg_token_end);
+						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
+						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
+						object_token->type = carma::type::EMPTY;
+						bracket_token->type = carma::type::EMPTY;
+
+
+						auto following_token = std::next(arg_token_end);
+						bool is_assignment = false;
+						if (following_token != end_entry_ && following_token->val == "=") {
+							is_assignment = true;
+						}
+
+						if (!is_assignment) {
+							arg_token_end->type = carma::type::ARRAYACCESSOR;
+							arg_token_end->val = "(" + object_token->val + " getVariable " + arg_string + ")";
+							current_token = --arg_token_end;
+						}
+						else {
+							auto val_token_end = std::next(following_token);
+							if (val_token_end == end_entry_)
+								continue; // @TODO: this should be a syntax error, hanging = operator.
+
+							auto val_token_start = val_token_end;
+							block_counter = 0;
+							for (val_token_end; val_token_end != end_entry_ && (val_token_end->val != ";" || block_counter > 0); ++val_token_end) {
+								if (val_token_end->type == carma::type::EMPTY)
+									continue;
+								if (val_token_end->val == "[" || val_token_end->val == "{" || val_token_end->val == "(")
+									block_counter++;
+								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
+									block_counter--;
+							}
+							process_accessors(tokens_, val_token_start, val_token_end);
+							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
+							for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
+								clear_token->type = carma::type::EMPTY;
+							}
+							arg_token_end->type = carma::type::EMPTY;
+							following_token->type = carma::type::EMPTY;
+							--val_token_end;
+							val_token_end->type = carma::type::ARRAYACCESSOR;
+							val_token_end->val = "(" + object_token->val + " setVariable [" + arg_string + ", " + val_string + "])";
 							current_token = val_token_end;
 						}
 					}
