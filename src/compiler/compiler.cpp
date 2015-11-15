@@ -3,11 +3,11 @@
 namespace carma {
 	namespace compiler {
 
-		void process_accessors(token_list &tokens_, token_entry start_entry_) {
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
+		void process_accessors(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
+			for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
-				if (std::next(current_token) != tokens_.end() && (std::next(current_token)->val == "." || std::next(current_token)->val == "[")) {
+				if (std::next(current_token) != end_entry_ && (std::next(current_token)->val == "." || std::next(current_token)->val == "[")) {
 					if (is_reserved_word(current_token->val))
 						continue;
 					auto object_token = current_token;
@@ -15,10 +15,10 @@ namespace carma {
 					
 					if (dot_token->val == ".") {
 						auto member_token = std::next(current_token, 2);
-						if (member_token == tokens_.end())
+						if (member_token == end_entry_)
 							continue;
 						auto next_token = std::next(current_token, 3);
-						if (next_token == tokens_.end())
+						if (next_token == end_entry_)
 							continue;
 
 						if (next_token->val != "." && next_token->val != "=" && next_token->val != "(" && next_token->val != "[") {
@@ -34,15 +34,19 @@ namespace carma {
 								member_token->type = carma::type::MEMBERACCESSOR;
 								current_token = dot_token;
 							}
+							else if (next_token->val == "(") {
+								process_method_calls(tokens_, object_token);
+								object_token->type = carma::type::EMPTY;
+							}
 						}
 					}
 					else if (dot_token->val == "[") {
 						token_entry value_token = std::next(dot_token);
-						if (value_token == tokens_.end())
+						if (value_token == end_entry_)
 							continue;
 						uint32_t block_counter = 0;
 						
-						for (value_token; value_token != tokens_.end() && (value_token->val != "]" || block_counter > 0); ++value_token) {
+						for (value_token; value_token != end_entry_ && (value_token->val != "]" || block_counter > 0); ++value_token) {
 							if (value_token->type == carma::type::EMPTY)
 								continue;
 							if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
@@ -50,9 +54,9 @@ namespace carma {
 							if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
 								block_counter--;
 						};
-
+						auto block_end = value_token;
 						auto next_token = std::next(value_token);
-						if (next_token == tokens_.end())
+						if (next_token == end_entry_)
 							continue;
 						if (next_token->val == "=")
 							continue;
@@ -60,7 +64,7 @@ namespace carma {
 						block_counter = 0;
 						token_list value_tokens;
 						value_token = std::next(dot_token);
-						for (value_token; value_token != tokens_.end() && (value_token->val != "]" || block_counter > 0); ++value_token) {
+						for (value_token; value_token != end_entry_ && (value_token->val != "]" || block_counter > 0); ++value_token) {
 							if (value_token->type == carma::type::EMPTY)
 								continue;
 							if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
@@ -68,18 +72,20 @@ namespace carma {
 							if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
 								block_counter--;
 							if (value_token->val == "[") {
-								process_accessors(tokens_, value_token);
+								process_accessors(tokens_, value_token, block_end);
 							}
-							else if (value_token->val == ".") {
-								std::prev(value_token)->type = carma::type::UNKNOWN;
-								process_accessors(tokens_, std::prev(value_token));
+							else if (std::next(value_token)->val == ".") {
+								process_accessors(tokens_, value_token, block_end);
 							}
-							value_tokens.push_back(*value_token);
+							else {
+								value_tokens.push_back(*value_token);
+							}
 							value_token->type = carma::type::EMPTY;
 						}
 						std::string value_string = build_string(value_tokens);
 						dot_token->type = carma::type::EMPTY;
 						current_token->type = carma::type::EMPTY;
+						object_token->type = carma::type::EMPTY;
 						value_token->val = "(" + object_token->val + " select " + value_string + ")";
 						value_token->type = carma::type::ARRAYACCESSOR;
 					}
@@ -97,11 +103,11 @@ namespace carma {
 
 		void process_simple_assigments(token_list &tokens_, token_entry start_entry_) {
 			uint32_t dummy_block_counter = 0;
-			process_simple_assigments(tokens_, start_entry_, dummy_block_counter);
+			process_simple_assigments(tokens_, start_entry_, tokens_.end());
 		}
 
 
-		void process_simple_assigments(token_list &tokens_, token_entry start_entry_, uint32_t &outer_block_counter) {
+		void process_simple_assigments(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
 			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
@@ -129,7 +135,7 @@ namespace carma {
 								if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
 									block_counter--;
 								if (value_token->val == ".") {
-									process_simple_assigments(tokens_, std::prev(value_token), block_counter);
+									process_simple_assigments(tokens_, std::prev(value_token));
 								}
 								value_tokens.push_back(*value_token);
 								value_token->type = carma::type::EMPTY;
@@ -142,7 +148,6 @@ namespace carma {
 							token end_token;
 							end_token.type = carma::type::ASSIGNMENTOPMEMBER;
 							end_token.val = object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "]";
-							outer_block_counter++;
 							tokens_.insert(value_token, end_token);
 						}
 					}
@@ -198,7 +203,7 @@ namespace carma {
 			}
 		}
 
-		void process_method_calls(token_list &tokens_, token_entry start_entry_) {
+		void process_method_calls(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
 			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;

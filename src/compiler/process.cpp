@@ -5,9 +5,9 @@ namespace carma {
 		std::string process_input(std::string input_) {
 			token_list tokens = tokenize(input_);
 
-			process_accessors(tokens, tokens.begin());
+			process_accessors(tokens, tokens.begin(), tokens.end());
 			clean_token_list(tokens);
-			process_method_calls(tokens, tokens.begin());
+			//process_method_calls(tokens, tokens.begin());
 			clean_token_list(tokens);
 			process_simple_assigments(tokens, tokens.begin());
 			clean_token_list(tokens);
