@@ -13,41 +13,7 @@ carma2_object setVariable ["__id", -1];
 carma2_object setVariable ["__handles", []];
 carma2_object setVariable ["__prototype", objNull];
 
-carma2_hashmap = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
-carma2_hashmap setText "carma2_obj";
 
-carma2_hashmap setVariable ["__id", -1];
-carma2_hashmap setVariable ["__handles", []];
-carma2_hashmap setVariable ["__prototype", objNull];
-
-carma2_hashmap setVariable ["_hasKey", {
-    params ["_key"];
-    !isNil { _thisObj getVariable _key };
-}];
-
-carma2_hashmap setVariable ["_delete", {
-    params ["_key"];
-    _thisObj setVariable [_key, nil];
-    nil;
-}];
-
-
-carma2_hashmap setVariable ["_keys", {
-    private ["_keys", "_allVars"];
-    _allVars = (allVariables _thisObj) - ["__id", "__handles", "__prototype", "_haskey", "_keys", "_delete"];
-    _keys = [];
-    {
-        if(!isNil { _thisObj getVariable _x }) then {
-            _keys pushBack _x;
-        };
-    } forEach _allVars;
-    _keys;
-}];
-
-
-
-#define CRITICAL_PARAMS   params ["_counter"]; (carma2_criticalArgs select _counter) params 
-#define CRITICAL_SETRETURN(val) carma2_criticalArgs set[_counter, val]
 
 carma2_fnc_callCritical = {
     params ["_args", "_function"];
@@ -90,7 +56,7 @@ carma2_fnc_newObjectInternal = {
         _thisObj = _newObj;
         _args call _constructor;
     };
-    carma2_createdObjects pushBack _newObj;
+    carma2_createdObjects set[carma2_objectIdCounter, _newObj];
     CRITICAL_SETRETURN(_newObj);
 };
 
@@ -150,3 +116,5 @@ carma2_fnc_spawnWrapperInternal = {
 {
     "carma_dll" callExtension ("0" + _x);
 } forEach (supportInfo "");
+
+CARMA_COMPILE("\x\carma2\rv\addons\lib\lib_carma2_hashmap.sqf");

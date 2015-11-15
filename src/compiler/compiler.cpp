@@ -186,6 +186,11 @@ namespace carma {
 						}
 					}
 					else if (std::next(current_token)->val == "[") {
+						if (current_token->type != carma::type::LITERAL &&
+							current_token->type != carma::type::ARRAYACCESSOR &&
+							current_token->type != carma::type::MEMBERACCESSOR &&
+							current_token->type != carma::type::METHODCALL)
+							continue;
 						if (is_reserved_word(current_token->val))
 							continue;
 						auto object_token = current_token;
