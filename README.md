@@ -138,6 +138,31 @@ my_func = { player sideChat format["this: %1", _this]; };
 my_func(1,2,3); // prints "this: [1,2,3]"
 ```
 
+###String Member Accesor {}
+
+Using the `{}` operator you can access member variables using strings.
+```
+test.member = 123;
+_val = test{"member"}; // assigns 123;
+test{"member"} = 321; // reassign using string accessor;
+```
+
+This functionally turns objects into a hash map (they are internally in carma2, and in the engine represented as a hash map anyways, so this makes sense).
+
+Because of this, carma2 comes with a default hash map object, `carma2_hashmap`. An example is provided below:
+```
+_testHash = new carma2_hashmap();
+_testHash{"key1"} = 123;
+_testHash{"key2"} = 321;
+_testHash{"key3"} = 999;
+
+{
+    player sideChat format["%1: %2", _x, _testHash{_x}];
+} forEach _testHash._keys();
+```
+
+Beyond the `carma2_hashmap._keys()` method show above there is also a `carma2_hashmap._hasKey(keyname)` and `carma2_hashmap._delete(key)` function as well. More documentation on this and other default objects will come in the wiki at some point in the future.
+
 ## Performance
 
 A often run into drawback with object oriented systems in SQF are the overhead that objects introduce, either through their programmatic implementation or through their in engine implementation. In carma2, the language strives to be as close as possible to the engine, to minimize overhead. To do this carma2 utilizes the native `setVariable` and `getVariable` SQF functions on native SQF objects, which in this case are [locations](https://community.bistudio.com/wiki/createLocation). Locations in SQF add no apparent overhead to game performance, and are simply resident in the SQF engine's memory. As such, tens of thousands of them can be initiated with no performance impact. This is already being utilized in projects such as ACRE for implementing a fast, SQF native hash-map implementation.
