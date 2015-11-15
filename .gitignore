@@ -1,3 +1,4 @@
 rv/addons/*.pbo
 rv/addons/*.bat
 rv/*.dll
+rv/carma_dll.*
