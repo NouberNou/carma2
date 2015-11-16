@@ -508,5 +508,45 @@ namespace carma {
 			};
 			return output;
 		}
+
+		std::string build_string_pretty(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_) {
+			token_list tokens = tokenize(build_string(tokens_, start_entry_, end_entry_));
+			std::string output = "";
+			int block_indent = 0;
+			for (auto current_token = tokens.begin(); current_token != tokens.end(); ++current_token) {
+				if (current_token->type == carma::type::EMPTY)
+					continue;
+				output += current_token->val;
+				if (std::next(current_token) != tokens.end() && std::next(current_token)->type == carma::type::LITERAL) {
+					if(current_token->val != "}" || current_token->val != "{")
+							output += " ";
+				}
+				if (std::next(current_token) != tokens.end() && (
+					std::next(current_token)->val == "="
+					)) {
+					output += " ";
+				}
+				if (current_token->val == "="
+					) {
+					output += " ";
+				}
+				if (current_token->val == "{")
+					block_indent++;
+				if (current_token->val == "}")
+					block_indent--;
+				if (current_token->val == ";" || current_token->val == "{") {
+					output += "\n";
+					int b = block_indent;
+					if (std::next(current_token) != tokens.end() && std::next(current_token)->val == "}")
+						b--;
+					for (int i = 0; i < b; ++i)
+						output += "    ";
+				}
+				//if (current_token->val == "{" && (std::next(current_token) != tokens.end() && std::next(current_token)->val != ";")) {
+				//	output += "\n";
+				//}
+			};
+			return output;
+		}
 	}
 };
