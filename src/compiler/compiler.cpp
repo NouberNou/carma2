@@ -191,9 +191,36 @@ namespace carma {
 							member_token->type = carma::type::EMPTY;
 							following_token->type = carma::type::EMPTY;
 							arg_token_end->type = carma::type::METHODCALL;
-							arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
-							current_token = --arg_token_end;
+							/*
+							This could be made more simple probably, but eh for now.
 
+							@TODO: In the future make these definable in SQF via some sort of registry and dynamically called/overridable.
+							*/
+							if (member_token->val == "__call") {
+								if (dot_token->val == ".") {
+									arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_methodInvokeContext)";
+								}
+								else {
+									arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_methodInvokeContext)";
+								}
+							} 
+							else if (member_token->val == "__apply") {
+								if (dot_token->val == ".") {
+									arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_methodApplyContext)";
+								}
+								else {
+									arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_methodApplyContext)";
+								}
+							}
+							else {
+								if (dot_token->val == ".") {
+									arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+								}
+								else {
+									arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+								}
+							}
+							current_token = --arg_token_end;
 						}
 					}
 					else if (std::next(current_token)->val == "[") {
@@ -349,6 +376,11 @@ namespace carma {
 						}
 					}
 					else if (std::next(current_token)->val == "(") {
+						if (current_token->type != carma::type::LITERAL &&
+							current_token->type != carma::type::ARRAYACCESSOR &&
+							current_token->type != carma::type::MEMBERACCESSOR &&
+							current_token->type != carma::type::METHODCALL)
+							continue;
 						uint32_t block_counter = 0;
 						auto function_token = current_token;
 						if (is_reserved_word(function_token->val))

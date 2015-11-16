@@ -15,6 +15,7 @@ carma2_object setVariable ["__prototype", objNull];
 
 
 
+
 carma2_fnc_callCritical = {
     params ["_args", "_function"];
     private ["_return", "_counter"];
@@ -68,6 +69,18 @@ carma2_fnc_delObject = {
 carma2_fnc_methodInvoke = {
     params ["_thisObj","_method","_args"];
     _args call (_thisObj getVariable _method);
+};
+
+carma2_fnc_methodInvokeContext = {
+    params ["_method","_args"];
+    private _thisObj = _args deleteAt 0;
+    _args call _method;
+};
+
+carma2_fnc_methodApplyContext = {
+    params ["_method","_args"];
+    _args params ["_thisObj", "_args"];
+    _args call _method;
 };
 
 carma2_fnc_compile = {
