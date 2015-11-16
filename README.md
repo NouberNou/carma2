@@ -246,3 +246,24 @@ _testHash{"key3"} = 999;
 
 Beyond the `carma2_hashmap._keys()` method show above there is also a `carma2_hashmap._hasKey(keyname)` and `carma2_hashmap._delete(key)` function as well. More documentation on this and other default objects will come in the wiki at some point in the future.
 
+## Additional Features
+
+### Critical Sections
+
+By including `\x\carma2\rv\addons\lib\carma.hpp` in your script (always a good idea) you can access the helper macros `carma2_start_crit_section` and `carma2_end_crit_section`. These allow you to add critical execution phases in a scheduled environment. That is, code between `carma2_start_crit_section` and `carma2_end_crit_section` will be executed in a blocking fashion, guaranteeing that the code will execute in sequence, and no other code will execute until it is finished.
+
+```
+#include "\x\carma2\rv\addons\lib\carma.hpp"
+
+[] spawn {
+    _testVar = "123";
+    carma2_start_crit_section;
+    for "_" from 0 to 10000 do {
+        diag_log text format["poop: %1 %2", _testVar, _thisScript];
+    };
+    carma2_end_crit_section;
+};
+```
+
+Be aware that code inside a critical section is considered its own scope, so while variables will transfer into it (including `_this`), local variables that are only declared inside of it will not leave the critical section. Define any variables you wish to manipulate inside the critical section before the critical section executes.
+
