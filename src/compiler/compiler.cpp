@@ -1,5 +1,9 @@
 #include "compiler.hpp"
 
+#include <unordered_map>
+#include <sstream>
+#include <iostream>
+
 namespace carma {
 	namespace compiler {
 
@@ -547,6 +551,42 @@ namespace carma {
 				//}
 			};
 			return output;
+		}
+
+		token_list minimize(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_) {
+			token_list tokens = tokenize(build_string(tokens_, start_entry_, end_entry_));
+			std::unordered_set<std::string> reserved_variables;
+			reserved_variables.insert("_this");
+			reserved_variables.insert("_thisObj");
+			reserved_variables.insert("_thisScript");
+			reserved_variables.insert("_x");
+			reserved_variables.insert("_forEachIndex");
+
+			std::string output = "";
+			token_list minimized_tokens;
+			std::unordered_map<std::string, std::string> unique_vars;
+			uint32_t id = 0;
+			for (auto current_token = tokens.begin(); current_token != tokens.end(); ++current_token) {
+				if (current_token->type == carma::type::LITERAL) {
+					if (!is_reserved_word(current_token->val) && current_token->val.substr(0, 1) == "_") {
+						if (reserved_variables.find(current_token->val) == reserved_variables.end()) {
+							if (unique_vars.find(current_token->val) == unique_vars.end()) {
+								std::stringstream var_name;
+								var_name << "_" << id++;
+								unique_vars[current_token->val] = var_name.str();
+							}
+							current_token->val = unique_vars[current_token->val];
+						}
+					}
+				}
+				minimized_tokens.push_back(*current_token);
+			}
+
+			for (auto entry : unique_vars) {
+				std::cout << entry.first << ": " << entry.second << "\n";
+			}
+
+			return minimized_tokens;
 		}
 	}
 };

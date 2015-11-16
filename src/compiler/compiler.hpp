@@ -14,5 +14,6 @@ namespace carma {
 		void process_new_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_);
 		std::string build_string(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_);
 		std::string build_string_pretty(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_);
+		token_list minimize(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_);
 	};
 };
