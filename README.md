@@ -258,7 +258,7 @@ By including `\x\carma2\rv\addons\lib\carma.hpp` in your script (always a good i
 [] spawn {
     _testVar = "123";
     carma2_start_crit_section;
-    for "_" from 0 to 10000 do {
+    for "_i" from 0 to 10000 do {
         diag_log text format["poop: %1 %2", _testVar, _thisScript];
     };
     carma2_end_crit_section;
