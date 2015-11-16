@@ -18,12 +18,15 @@ carma2_object setVariable ["__prototype", objNull];
 
 carma2_fnc_callCritical = {
     params ["_args", "_function"];
-    private ["_return", "_counter"];
-    _counter = carma2_criticalCounter;
+
+    private _counter = carma2_criticalCounter;
     carma2_criticalCounter = carma2_criticalCounter + 1;
     carma2_criticalArgs set[_counter, _args];
+    
+    // Execute the critical code     
     format["[%1] call %2; false;", _counter, _function] configClasses (configfile >> "CarmaBlank");
-    _return = carma2_criticalArgs select _counter;
+    
+    private _return = carma2_criticalArgs select _counter;
     carma2_criticalCounter = carma2_criticalCounter - 1;
     _return;
 };
@@ -35,8 +38,8 @@ carma2_fnc_newObject = {
 
 carma2_fnc_newObjectInternal = {
     CRITICAL_PARAMS ["_args", "_type", "_scriptHandle"];
-    private ["_newObj", "_constructor", "_key", "_val", "_thisObj", "_handles"];
-    _newObj = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
+    private ["_key", "_val", "_thisObj"];
+    private _newObj = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
     _newObj setText "carma2_obj";
     {
         _key = _x;
@@ -47,17 +50,15 @@ carma2_fnc_newObjectInternal = {
         _newObj setVariable [_key, _val];
     } forEach (allVariables _type);
     _newObj setVariable ["__id", carma2_objectIdCounter];
-    _handles = [];
-    _handles pushBack _scriptHandle;
-    _newObj setVariable ["__handles", _handles];
+    _newObj setVariable ["__handles", [_scriptHandle]];
     _newObj setVariable ["__prototype", _type];
-    carma2_objectIdCounter = carma2_objectIdCounter + 1;
-    _constructor = _newObj getVariable "__init";
+
+    private _constructor = _newObj getVariable "__init";
     if(!isNil "_constructor") then {
         _thisObj = _newObj;
         _args call _constructor;
     };
-    carma2_createdObjects set[carma2_objectIdCounter, _newObj];
+    carma2_objectIdCounter = carma2_createdObjects pushback _newObj;
     CRITICAL_SETRETURN(_newObj);
 };
 
@@ -85,12 +86,11 @@ carma2_fnc_methodApplyContext = {
 
 carma2_fnc_compile = {
     params ["_file", ["_execute", true]];
-    private ["_result"];
-    _text = preprocessFile _file;
+    private _text = preprocessFile _file;
     _text = "1" + _text;
-    _result = "carma_dll" callExtension _text;
-    _result = (compile preprocessFileLineNumbers _result);
-    if(_execute) then {
+
+    private _result = (compile preprocessFileLineNumbers ("carma_dll" callExtension _text));
+    if (_execute) then {
         [] call _result;
     };
     _result;
@@ -102,9 +102,9 @@ carma2_fnc_spawnWrapper = {
 
 carma2_fnc_spawnWrapperInternal = {
     CRITICAL_PARAMS ["_args", "_func"];
-    private ["_handle"];
-    _handle = _args spawn _func;
-    _arraySearch = {
+
+    private _handle = _args spawn _func;
+    private _arraySearch = {
         {
             if(IS_CARMAOBJECT(_x)) then {
                 (_x getVariable "__handles") pushBack _handle;
