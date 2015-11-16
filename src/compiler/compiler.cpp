@@ -493,27 +493,6 @@ namespace carma {
 			}*/
 		}
 
-		void process_del_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
-			/*
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
-				if (current_token->type == carma::type::EMPTY)
-					continue;
-				if (current_token->val == "del") {
-					auto object_token = std::next(current_token);
-					if (object_token == tokens_.end())
-						continue;
-					auto next_token = std::next(current_token, 2);
-					if (next_token == tokens_.end())
-						continue;
-					if (next_token->val == ";") {
-						object_token->val = "[" + object_token->val + "] call carma2_fnc_delObject";
-						current_token->type = carma::type::EMPTY;
-					}
-				}
-			}
-			*/
-		}
-
 		std::string build_string(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_) {
 			std::string output = "";
 			for (auto current_token = start_entry_; current_token != end_entry_; ++current_token) {
