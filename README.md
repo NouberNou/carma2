@@ -267,3 +267,4 @@ By including `\x\carma2\rv\addons\lib\carma.hpp` in your script (always a good i
 
 Be aware that code inside a critical section is considered its own scope, so while variables will transfer into it (including `_this`), local variables that are only declared inside of it will not leave the critical section. Define any variables you wish to manipulate inside the critical section before the critical section executes.
 
+Critical sections work by abusing the condition statement in the SQF command [`configClasses`](https://community.bistudio.com/wiki/configClasses) which executes in a blocking fashion.
