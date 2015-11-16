@@ -43,6 +43,12 @@ _testObject.myMethod(); // calls myMethod and displays "myVal: 2"
 
 Objects can call a constructor like function on creation by assigning the special method `__init`. There are no destructors in carma2 as the system uses a garbage collecting reference tracker. Implementation of a special method for when the object is garbage collected (or the `del` keyword is used) is forthcoming, though programmers using carma2 should make sure to smartly implement resources that need to be freed in a way that is not dependent on the lifespan of the object.
 
+## Performance
+
+A often run into drawback with object oriented systems in SQF are the overhead that objects introduce, either through their programmatic implementation or through their in engine implementation. In carma2, the language strives to be as close as possible to the engine, to minimize overhead. To do this carma2 utilizes the native `setVariable` and `getVariable` SQF functions on native SQF objects, which in this case are [locations](https://community.bistudio.com/wiki/createLocation). Locations in SQF add no apparent overhead to game performance, and are simply resident in the SQF engine's memory. As such, tens of thousands of them can be initiated with no performance impact. This is already being utilized in projects such as ACRE for implementing a fast, SQF native hash-map implementation.
+
+Because of this member variable access is a simple call to `getVariable`. Assignments are a simple call to `setVariable`. Invoking a method simply calls a wrapper function that creates the `_thisObj` special variable and then calls the arguments on a `getVariable` call. Overhead on method invocation is as little as `0.0077ms`, and default single member access is often a third of that. This provides almost native SQF level speeds.
+
 ## Usage
 
 Using carma2 is very simple. Launch with the mod enabled/included, as well as CBA.
@@ -240,8 +246,3 @@ _testHash{"key3"} = 999;
 
 Beyond the `carma2_hashmap._keys()` method show above there is also a `carma2_hashmap._hasKey(keyname)` and `carma2_hashmap._delete(key)` function as well. More documentation on this and other default objects will come in the wiki at some point in the future.
 
-## Performance
-
-A often run into drawback with object oriented systems in SQF are the overhead that objects introduce, either through their programmatic implementation or through their in engine implementation. In carma2, the language strives to be as close as possible to the engine, to minimize overhead. To do this carma2 utilizes the native `setVariable` and `getVariable` SQF functions on native SQF objects, which in this case are [locations](https://community.bistudio.com/wiki/createLocation). Locations in SQF add no apparent overhead to game performance, and are simply resident in the SQF engine's memory. As such, tens of thousands of them can be initiated with no performance impact. This is already being utilized in projects such as ACRE for implementing a fast, SQF native hash-map implementation.
-
-Because of this member variable access is a simple call to `getVariable`. Assignments are a simple call to `setVariable`. Invoking a method simply calls a wrapper function that creates the `_thisObj` special variable and then calls the arguments on a `getVariable` call. Overhead on method invocation is as little as `0.0077ms`, and default single member access is often a third of that. This provides almost native SQF level speeds.
