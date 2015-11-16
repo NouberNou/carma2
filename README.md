@@ -60,27 +60,74 @@ The `CARMA_COMPILE` macro is a macro to `carma2_fnc_compile`. If you just wish t
 
 ## Advanced Concepts
 
+###Pseudo-static Members with :: Operator
+
+Using the `::` operator you can easily access a objects prototype members/methods, the same as above using the `__prototype` member.
+
+Since all objects that descend from a common prototype share the same instance of that prototype you can use it to define static methods/members that will be shared across all classes.
+
+```
+test_base = new carma2_object(); // this will be our prototype.
+
+test_base.staticMember = 123; // assign the prototype object a member var
+
+test_instance1 = new test_base();
+test_instance2 = new test_base();
+
+player sideChat format["test_instance1: %1", test_instance1::staticMember]; // prints 123
+
+test_instance1::staticMember = 321; // assign the static variable on test_instance1 to 321
+
+player sideChat format["test_instance2: %1", test_instance2::staticMember]; // print the static variable on test_instance2, prints 321
+```
+
 ###Calling Parent Functions
 
-Calling the parent function of an overridden object method can be done via the `__prototype` member as seen below:
-```
-_testObject = new carma2_object(); // create a new object from the default carma2_base object
-_testObject.myMethod = { player sideChat "hello world!"; };
-_testObject.myMethod(); // calls myMethod and displays "hello world!"
+Calling parent functions is done via accessing the objects prototype object definition, either through the `::` operator, or the `__prototype` member, and then using the magic methods `__call` or `__apply`.
 
-_anotherTestObject = new _testObject();
-_anotherTestObject.myMethod = { _thisObj.__prototype.myMethod(); player sideChat "good bye world!"; };
-_anotherTestObject.myMethod(); // calls myMethod on this new object, which invokes myMethod from _testObject, printing "hello world!" and then "good bye world!"
+An example is given below demonstrating the usage.
+
+```
+test_base = new carma2_object();
+test_base.testVal = "base instance";
+test_base.parentMethod = {
+    diag_log text format["Object %1: %2, %3", _thisObj.__id, _thisObj.testVal, _this];
+};
+
+test_instance = new test_base();
+test_instance.testVal = "child instance";
+
+test_instance.testMethod = {
+    // call the prototype method, in the context of the prototype, essentially a static method.
+    _thisObj::parentMethod(1);
+    
+    // call the prototype method, but in the context of this instance using __call(context, arg1, arg2, ...)
+    _thisObj::parentMethod.__call(_thisObj, 2);
+    
+    // call the prototype method, but using __apply(context, arg_array)
+    _args = [3];
+    _thisObj::parentMethod.__apply(_thisObj, _args);
+};
+
+test_instance.testMethod();
 ```
 
-An example of the output of this can be seen here: http://pastebin.com/raw.php?i=ar1y6PUV
+This prints to the RPT:
+```
+Object 1: base instance, [1]
+Object 2: child instance, [2]
+Object 2: child instance, [3]
+```
 
 ###Chaining
 
-Chaining members is allowed if they are also objects (if they are not, undefined RPT errors may occur).
+Chaining members with the `.` or the `::` operator is allowed if they are also objects (if they are not, undefined RPT errors may occur).
 ```
 _var = _testObject.myMemberObject.anotherMember; // accessing a members member.
 _testObject.myMemberObject.someMethod(1,2,3); // invoking a members method.
+
+_var = _testObject::myStaticMember::anotherStaticMember; // accessing a static objects member.
+_testObject::myStaticObject::someStaticMethod(1,2,3); // invoking a static object's method.
 ```
 
 Chaining methods is also supported:
