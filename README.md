@@ -221,7 +221,7 @@ my_func = { player sideChat format["this: %1", _this]; };
 my_func(1,2,3); // prints "this: [1,2,3]"
 ```
 
-###String Member Accesor {}
+###String Member Accessor {}
 
 Using the `{}` operator you can access member variables using strings.
 ```
