@@ -5,7 +5,7 @@ Unordered hash map implementation in carma2 sqf.
 carma2_hashmap = new carma_object();
 
 carma2_hashmap.__init = {
-    params [["_initial", []];
+    params [["_initial", []]];
     if(count _initial > 0) then {
         {
             _thisObj{_x[0]} = _x[1];
