@@ -35,8 +35,8 @@ carma2_fnc_newObject = {
 
 carma2_fnc_newObjectInternal = {
     CRITICAL_PARAMS ["_args", "_type", "_scriptHandle"];
-    private ["_newObj", "_constructor", "_key", "_val", "_thisObj", "_handles"];
-    _newObj = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
+    private ["_key", "_val", "_thisObj"];
+    private _newObj = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
     _newObj setText "carma2_obj";
     {
         _key = _x;
@@ -47,17 +47,15 @@ carma2_fnc_newObjectInternal = {
         _newObj setVariable [_key, _val];
     } forEach (allVariables _type);
     _newObj setVariable ["__id", carma2_objectIdCounter];
-    _handles = [];
-    _handles pushBack _scriptHandle;
-    _newObj setVariable ["__handles", _handles];
+    _newObj setVariable ["__handles", [_scriptHandle]];
     _newObj setVariable ["__prototype", _type];
-    carma2_objectIdCounter = carma2_objectIdCounter + 1;
-    _constructor = _newObj getVariable "__init";
+
+    private _constructor = _newObj getVariable "__init";
     if(!isNil "_constructor") then {
         _thisObj = _newObj;
         _args call _constructor;
     };
-    carma2_createdObjects set[carma2_objectIdCounter, _newObj];
+    carma2_objectIdCounter = carma2_createdObjects pushback _newObj;
     CRITICAL_SETRETURN(_newObj);
 };
 
