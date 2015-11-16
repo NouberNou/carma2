@@ -18,12 +18,15 @@ carma2_object setVariable ["__prototype", objNull];
 
 carma2_fnc_callCritical = {
     params ["_args", "_function"];
-    private ["_return", "_counter"];
-    _counter = carma2_criticalCounter;
+
+    private _counter = carma2_criticalCounter;
     carma2_criticalCounter = carma2_criticalCounter + 1;
     carma2_criticalArgs set[_counter, _args];
+    
+    // Execute the critical code     
     format["[%1] call %2; false;", _counter, _function] configClasses (configfile >> "CarmaBlank");
-    _return = carma2_criticalArgs select _counter;
+    
+    private _return = carma2_criticalArgs select _counter;
     carma2_criticalCounter = carma2_criticalCounter - 1;
     _return;
 };
@@ -83,12 +86,11 @@ carma2_fnc_methodApplyContext = {
 
 carma2_fnc_compile = {
     params ["_file", ["_execute", true]];
-    private ["_result"];
-    _text = preprocessFile _file;
+    private _text = preprocessFile _file;
     _text = "1" + _text;
-    _result = "carma_dll" callExtension _text;
-    _result = (compile preprocessFileLineNumbers _result);
-    if(_execute) then {
+
+    private _result = (compile preprocessFileLineNumbers ("carma_dll" callExtension _text));
+    if (_execute) then {
         [] call _result;
     };
     _result;
@@ -100,9 +102,9 @@ carma2_fnc_spawnWrapper = {
 
 carma2_fnc_spawnWrapperInternal = {
     CRITICAL_PARAMS ["_args", "_func"];
-    private ["_handle"];
-    _handle = _args spawn _func;
-    _arraySearch = {
+
+    private _handle = _args spawn _func;
+    private _arraySearch = {
         {
             if(IS_CARMAOBJECT(_x)) then {
                 (_x getVariable "__handles") pushBack _handle;
