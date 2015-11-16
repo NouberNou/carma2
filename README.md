@@ -81,11 +81,30 @@ test_instance1::staticMember = 321; // assign the static variable on test_instan
 player sideChat format["test_instance2: %1", test_instance2::staticMember]; // print the static variable on test_instance2, prints 321
 ```
 
-###Calling Parent Functions
+###Chaining
 
-Calling parent functions is done via accessing the objects prototype object definition, either through the `::` operator, or the `__prototype` member, and then using the magic methods `__call` or `__apply`.
+Chaining members with the `.` or the `::` operator is allowed if they are also objects (if they are not, undefined RPT errors may occur).
+```
+_var = _testObject.myMemberObject.anotherMember; // accessing a members member.
+_testObject.myMemberObject.someMethod(1,2,3); // invoking a members method.
 
-An example is given below demonstrating the usage.
+_var = _testObject::myStaticMember::anotherStaticMember; // accessing a static objects member.
+_testObject::myStaticObject::someStaticMethod(1,2,3); // invoking a static object's method.
+```
+
+Chaining methods is also supported:
+```
+_testObject = new carma2_object();
+_testObject.hello = { player sideChat "hello"; _thisObj; };
+_testObject.world = { player sideChat "world"; _thisObj; };
+_testObject.hello().world(); // prints "hello" and then prints "world"
+```
+
+###Calling Overriden Methods
+
+Calling the original overridden methods is done via accessing the objects prototype object definition, either through the `::` operator, or the `__prototype` member, and then using the magic methods `__call(context, arg1, arg2, ...)` or `__apply(context, arg_array)`. These methods execute the desired overriden/parent method in a supplied context, commonly passing `_thisObj` to the method, along with the methods arguments.
+
+An example is given below demonstrating the usage of the `__call` and `__apply` functions.
 
 ```
 test_base = new carma2_object();
@@ -119,23 +138,34 @@ Object 2: child instance, [2]
 Object 2: child instance, [3]
 ```
 
-###Chaining
+An example of overridden method calling it's parent method is below.
 
-Chaining members with the `.` or the `::` operator is allowed if they are also objects (if they are not, undefined RPT errors may occur).
 ```
-_var = _testObject.myMemberObject.anotherMember; // accessing a members member.
-_testObject.myMemberObject.someMethod(1,2,3); // invoking a members method.
+test_base = new carma2_object();
+test_base.testVal = "base instance";
+test_base.testVal = 0;
+test_base.testMethod = {
+    diag_log text format["parent: %1 testVal: %2", _this[0], _thisObj.testVal];
+};
 
-_var = _testObject::myStaticMember::anotherStaticMember; // accessing a static objects member.
-_testObject::myStaticObject::someStaticMethod(1,2,3); // invoking a static object's method.
+test_instance = new test_base();
+test_instance.testVal = 999;
+test_instance.testMethod = {
+    _thisObj::testMethod(333); // call the parent method as a static method, the context is the __prototype object.
+    _thisObj::testMethod.__call(_thisObj, _this[0]); // call takes the args to the function in-situ after the context object
+    _thisObj::testMethod.__apply(_thisObj, _this); // apply takes the args as an array
+    diag_log text format["child: %1 testVal: %2", _this[0], _thisObj.testVal];
+};
+
+test_instance.testMethod(123);
 ```
 
-Chaining methods is also supported:
+Results in:
 ```
-_testObject = new carma2_object();
-_testObject.hello = { player sideChat "hello"; _thisObj; };
-_testObject.world = { player sideChat "world"; _thisObj; };
-_testObject.hello().world(); // prints "hello" and then prints "world"
+parent: 333 testVal: 0
+parent: 123 testVal: 999
+parent: 123 testVal: 999
+child: 123 testVal: 999
 ```
 
 ###Anonymous Objects
