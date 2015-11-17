@@ -13,7 +13,7 @@ The concept of carma2 is to add a very low overhead, very simple object implemen
 Implementation of objects is done in a very simple fashion that ultimately is closer to syntactic sugar than it is a "proper" object implementation, but through the help of helpers provides a robust object system. Objects are created using the `new` keyword and members and methods are accessed using the `.` operator and assigned/defined using the standard SQF `=` operator. The only major difference is that method invocation is done using `()` following the method name, instead of the standard SQF `arg call function` format (though it is entirely possible to invoke methods this way, though with some caveats). 
 
 A simple carma2 example is below:
-```
+```javascript
 _testObject = new carma2_object(); // create a new object from the default carma2_base object
 _testObject.myMethod = { player sideChat "hello world!"; };
 _testObject.myMethod(); // calls myMethod and displays "hello world!"
@@ -23,7 +23,7 @@ Method parameters can be accessed via the normal `_this` variable.
 
 Objects as such then are defined as they are created, similar to the Javascript prototype system. As such creating a new object of an existing type is as easy as follows:
 
-```
+```javascript
 // using the code from above
 _anotherTestObject = new _testObject();
 _anotherTestObject.myMethod(); // calls myMethod on this new object.
@@ -34,7 +34,7 @@ Objects will copy their members (but will **not** copy their values) to the new 
 Method definitions can access their calling object via the `_thisObj` variable.
 
 For example:
-```
+```javascript
 _testObject = new carma2_object(); // create a new object from the default carma2_base object
 _testObject.myMethod = { player sideChat format["myVal: %1", _thisObj.myVal]; };
 _testObject.myVal = 2;
@@ -54,7 +54,7 @@ Because of this member variable access is a simple call to `getVariable`. Assign
 Using carma2 is very simple. Launch with the mod enabled/included, as well as CBA.
 
 A simple usage example is here:
-```
+```sqf
 #include "\x\carma2\rv\addons\lib\carma.hpp"
 
 CARMA_COMPILE("test.sqf");
@@ -72,7 +72,7 @@ If you are familiar with Javascript you will know that all function definitions 
 
 For example, if you use the `function` keyword with arguments, like `function(_arg1, _arg2, _arg3)` it will place in the following function definition a correctly formatted SQF `params` statement. You can even define optional arguments. A full example is given below.
 
-```
+```javascript
 // defining arguments with the function keyword
 test_function = function(_arg1, _arg2) {
     player sideChat format["1: %1, 2: %2", _arg1, _arg2];
@@ -90,7 +90,7 @@ test_function("a", "b"); // prints 1: a, 2: b, 3: c
 
 When you declare a function with the `function` keyword you also get the added bonus of being able to use the `return` keyword to break out and return a value anywhere in a function.
 
-```
+```javascript
 test_function = function(_arg1, _arg2) {
     if(_arg2 > 0) then { // don't divide by 0!
         return _arg1/_arg2;
@@ -107,7 +107,7 @@ Return works fine, even inside anonymous or embeded functions.
 
 All code in carma can be immediately invoked after being defined, even if it is anonymous. Using the above example again.
 
-```
+```javascript
 _result = function(_arg1, _arg2) {
     if(_arg2 > 0) then { // don't divide by 0!
         return _arg1/_arg2;
@@ -127,7 +127,7 @@ Using the `::` operator you can easily access a objects prototype members/method
 
 Since all objects that descend from a common prototype share the same instance of that prototype you can use it to define static methods/members that will be shared across all classes.
 
-```
+```javascript
 test_base = new carma2_object(); // this will be our prototype.
 
 test_base.staticMember = 123; // assign the prototype object a member var
@@ -145,7 +145,7 @@ player sideChat format["test_instance2: %1", test_instance2::staticMember]; // p
 ###Chaining
 
 Chaining members with the `.` or the `::` operator is allowed if they are also objects (if they are not, undefined RPT errors may occur).
-```
+```javascript
 _var = _testObject.myMemberObject.anotherMember; // accessing a members member.
 _testObject.myMemberObject.someMethod(1,2,3); // invoking a members method.
 
@@ -154,7 +154,7 @@ _testObject::myStaticObject::someStaticMethod(1,2,3); // invoking a static objec
 ```
 
 Chaining methods is also supported:
-```
+```javascript
 _testObject = new carma2_object();
 _testObject.hello = { player sideChat "hello"; _thisObj; };
 _testObject.world = { player sideChat "world"; _thisObj; };
@@ -167,7 +167,7 @@ Calling the original overridden methods is done via accessing the objects protot
 
 An example is given below demonstrating the usage of the `__call` and `__apply` functions.
 
-```
+```javascript
 test_base = new carma2_object();
 test_base.testVal = "base instance";
 test_base.parentMethod = {
@@ -193,7 +193,7 @@ test_instance.testMethod();
 ```
 
 This prints to the RPT:
-```
+```javascript
 Object 1: base instance, [1]
 Object 2: child instance, [2]
 Object 2: child instance, [3]
@@ -201,7 +201,7 @@ Object 2: child instance, [3]
 
 An example of overridden method calling it's parent method is below.
 
-```
+```javascript
 test_base = new carma2_object();
 test_base.testVal = "base instance";
 test_base.testVal = 0;
@@ -222,7 +222,7 @@ test_instance.testMethod(123);
 ```
 
 Results in:
-```
+```javascript
 parent: 333 testVal: 0
 parent: 123 testVal: 999
 parent: 123 testVal: 999
@@ -232,7 +232,7 @@ child: 123 testVal: 999
 ###Anonymous Objects
 
 Passing an object to a SQF function or a carma2 object method can be done anonymously via the `new` keyword.
-```
+```javascript
 [new someObject()] call some_sqf_fnc;
 _myObject.method(new subObject());
 ```
@@ -241,7 +241,7 @@ _myObject.method(new subObject());
 
 Arrays can now be accessed and manipulated via the more traditional `[]` operator as in other languages.
 
-```
+```javascript
 _testObject = new carma2_object();
 
 _testObject.myArray = [1,2,3];
@@ -260,7 +260,7 @@ player sideChat format["_testObject.myArray[0] = %1", _testObject.getArray()[0]]
 
 Arrays on their own can be accessed via the `[]` operator as well.
 
-```
+```javascript
 _testArray = [1,2,3];
 player sideChat format["Test array: %1", _testArray[1]];
 _testArray[1] = 48;
@@ -271,7 +271,7 @@ player sideChat format["Test array: %1", _testArray[1]];
 
 You can call any SQF defined function the same as you would in most languages using parenthesis.
 
-```
+```javascript
 my_func = { player sideChat format["this: %1", _this]; };
 my_func(1,2,3); // prints "this: [1,2,3]"
 ```
@@ -279,7 +279,7 @@ my_func(1,2,3); // prints "this: [1,2,3]"
 ###String Member Accessor `{}`
 
 Using the `{}` operator you can access member variables using strings.
-```
+```javascript
 test.member = 123;
 _val = test{"member"}; // assigns 123;
 test{"member"} = 321; // reassign using string accessor;
@@ -288,7 +288,7 @@ test{"member"} = 321; // reassign using string accessor;
 This functionally turns objects into a hash map (they are internally in carma2, and in the engine represented as a hash map anyways, so this makes sense).
 
 Because of this, carma2 comes with a default hash map object, `carma2_hashmap`. An example is provided below:
-```
+```javascript
 _testHash = new carma2_hashmap();
 _testHash{"key1"} = 123;
 _testHash{"key2"} = 321;
@@ -307,7 +307,7 @@ Beyond the `carma2_hashmap._keys()` method show above there is also a `carma2_ha
 
 By including `\x\carma2\rv\addons\lib\carma.hpp` in your script (always a good idea) you can access the helper macros `carma2_start_crit_section` and `carma2_end_crit_section`. These allow you to add critical execution phases in a scheduled environment. That is, code between `carma2_start_crit_section` and `carma2_end_crit_section` will be executed in a blocking fashion, guaranteeing that the code will execute in sequence, and no other code will execute until it is finished.
 
-```
+```javascript
 #include "\x\carma2\rv\addons\lib\carma.hpp"
 
 [] spawn {
