@@ -9,6 +9,6 @@ using namespace carma::compiler;
 
 namespace carma {
 	namespace process {
-		std::string process_input(std::string input_);
+		std::string process_input(std::string input_, bool do_pretty_, bool minimize_);
 	}
 }

@@ -11,12 +11,12 @@ namespace carma {
 			bool in_string = false;
 			bool is_comment_line = false;
 			bool is_comment_block = false;
-
+			std::string string_quote_type = "'";
 			for (std::string::size_type stream_pos = 0; stream_pos < source_.size(); ++stream_pos) {
 				std::string cur_char = source_.substr(stream_pos, 1);
 
 				if (!in_string) {
-					if (cur_char == "\"" || cur_char == " " || cur_char == "\t" ||
+					if (cur_char == "\"" || cur_char == "'" || cur_char == " " || cur_char == "\t" ||
 						cur_char == "+" ||
 						cur_char == "-" ||
 						cur_char == "*" ||
@@ -123,6 +123,9 @@ namespace carma {
 						if (cur_char == "\"") {
 							token_str = "\"" + token_str;
 						}
+						if (cur_char == "'") {
+							token_str = "'" + token_str;
+						}
 					}
 					else {
 						if (
@@ -158,13 +161,14 @@ namespace carma {
 					token_str += cur_char;
 				}
 				if (!is_comment_line && !is_comment_block) {
-					if (cur_char == "\"") {
+					if (cur_char == "\"" || cur_char == "'") {
 						if (!in_string) {
+							string_quote_type = cur_char;
 							in_string = true;
 						}
-						else {
-							if (source_.substr(stream_pos + 1, 1) == "\"") {
-								token_str += "\"";
+						else if(in_string && cur_char == string_quote_type) {
+							if (source_.substr(stream_pos + 1, 1) == string_quote_type) {
+								token_str += string_quote_type;
 								stream_pos++;
 							}
 							else {

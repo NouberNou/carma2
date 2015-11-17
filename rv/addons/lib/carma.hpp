@@ -8,3 +8,5 @@
 
 #define carma2_start_crit_section ____carma_crit_section = {
 #define carma2_end_crit_section }; "_this call ____carma_crit_section; false;" configClasses (configfile >> "CarmaBlank")
+
+#define var private

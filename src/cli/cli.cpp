@@ -17,13 +17,16 @@ namespace carma {
 	namespace cli {
 		enum arg_options {
 			output_file,
-			reserved_words_file
+			reserved_words_file,
+			pretty_output
 		};
 
 
 		uint32_t find_arg_code(std::string arg_) {
 			if (arg_ == "-o") return arg_options::output_file;
 			if (arg_ == "-r") return arg_options::reserved_words_file;
+			if (arg_ == "-p") return arg_options::pretty_output;
+
 			return -1;
 		}
 	}
@@ -33,13 +36,14 @@ namespace carma {
 int main(int argc, char **argv) {
 	uint32_t arg_index = 1;
 	if (argc < 2) {
-		std::cout << "Usage: cli.exe [-o output.sqf] [-r reserved_words.txt] input.sqf\n";
+		std::cout << "Usage: cli.exe [-p] [-o output.sqf] [-r reserved_words.txt] input.sqf\n";
 		return 0;
 	}
 	std::string input_filename(argv[argc - 1]);
 	std::string output_filename = "carma2_sqf_.sqf";
 	std::string reserved_words_filename = "";
-	for (arg_index; arg_index < argc-1; ++arg_index) {
+	bool do_pretty = false;
+	for (arg_index; arg_index < argc - 1; ++arg_index) {
 		std::string arg(argv[arg_index]);
 		switch (carma::cli::find_arg_code(arg)) {
 		case carma::cli::arg_options::output_file:
@@ -47,6 +51,9 @@ int main(int argc, char **argv) {
 			break;
 		case carma::cli::arg_options::reserved_words_file:
 			reserved_words_filename = std::string(argv[++arg_index]);
+			break;
+		case carma::cli::arg_options::pretty_output:
+			do_pretty = true;
 			break;
 		};
 	}
@@ -69,7 +76,7 @@ int main(int argc, char **argv) {
 	}
 	std::string input_str((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 
-	std::string output = carma::process::process_input(input_str);
+	std::string output = carma::process::process_input(input_str, do_pretty, true);
 
 	std::ofstream compile_file(output_filename);
 	if (!compile_file.is_open()) {

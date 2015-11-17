@@ -66,7 +66,62 @@ The `CARMA_COMPILE` macro is a macro to `carma2_fnc_compile`. If you just wish t
 
 ## Advanced Concepts
 
-###Pseudo-static Members with :: Operator
+### Using the `function` Keyword
+
+If you are familiar with Javascript you will know that all function definitions start with the `function` keyword. While this is not required in carma code, it does give you some added benefits.
+
+For example, if you use the `function` keyword with arguments, like `function(_arg1, _arg2, _arg3)` it will place in the following function definition a correctly formatted SQF `params` statement. You can even define optional arguments. A full example is given below.
+
+```
+// defining arguments with the function keyword
+test_function = function(_arg1, _arg2) {
+    player sideChat format["1: %1, 2: %2", _arg1, _arg2];
+};
+test_function("a", "b"); // prints 1: a, 2: b
+
+// defining option arguments with the function keyword
+test_function = function(_arg1, _arg2, _arg3 = "c") {
+    player sideChat format["1: %1, 2: %2, 3: %3", _arg1, _arg2, _arg3];
+};
+test_function("a", "b"); // prints 1: a, 2: b, 3: c
+```
+
+#### Gaining the `return` Keyword
+
+When you declare a function with the `function` keyword you also get the added bonus of being able to use the `return` keyword to break out and return a value anywhere in a function.
+
+```
+test_function = function(_arg1, _arg2) {
+    if(_arg2 > 0) then { // don't divide by 0!
+        return _arg1/_arg2;
+    };
+    return nil;
+};
+
+player sideChat format["res: %1", test_function(1, 2)]; // returns and prints 0.5
+```
+
+Return works fine, even inside anonymous or embeded functions.
+
+#### Immediately-Invoked Function Expression (IIFE)
+
+All code in carma can be immediately invoked after being defined, even if it is anonymous. Using the above example again.
+
+```
+_result = function(_arg1, _arg2) {
+    if(_arg2 > 0) then { // don't divide by 0!
+        return _arg1/_arg2;
+    };
+    return nil;
+}(1, 2);
+
+player sideChat format["res: %1", _result];
+```
+The variable `_result` contains the return value of the function, instead of the function definition.
+
+You do not specifically have to use the `function` keyword for IIFE to be done, raw code blocks are also able to be invoked right after definition.
+
+###Pseudo-static Members with `::` Operator
 
 Using the `::` operator you can easily access a objects prototype members/methods, the same as above using the `__prototype` member.
 
@@ -182,7 +237,7 @@ Passing an object to a SQF function or a carma2 object method can be done anonym
 _myObject.method(new subObject());
 ```
 
-###Array [] Accessors
+###Array `[]` Accessors
 
 Arrays can now be accessed and manipulated via the more traditional `[]` operator as in other languages.
 
@@ -221,7 +276,7 @@ my_func = { player sideChat format["this: %1", _this]; };
 my_func(1,2,3); // prints "this: [1,2,3]"
 ```
 
-###String Member Accessor {}
+###String Member Accessor `{}`
 
 Using the `{}` operator you can access member variables using strings.
 ```

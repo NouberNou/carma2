@@ -2,6 +2,8 @@
 /**
 Unordered hash map implementation in carma2 sqf.
 */
+#include "carma.hpp"
+
 carma2_hashmap = new carma_object();
 
 carma2_hashmap.__init = {
@@ -26,9 +28,8 @@ carma2_hashmap._delete = {
 
 
 carma2_hashmap._keys = {
-    private ["_keys", "_allVars"];
-    _allVars = (allVariables _thisObj) - ["__id", "__handles", "__prototype", "_haskey", "_keys", "_delete"];
-    _keys = [];
+    private _allVars = (allVariables _thisObj) - carma2_hashmap.__baseMembers;
+    private _keys = [];
     {
         if(!isNil { _thisObj{_x} }) then {
             _keys pushBack _x;
@@ -36,3 +37,5 @@ carma2_hashmap._keys = {
     } forEach _allVars;
     _keys;
 };
+
+carma2_hashmap.__baseMembers = allVariables carma2_hashmap;
