@@ -5,13 +5,9 @@ carma2_objectIdCounter = 0;
 carma2_criticalArgs = [];
 carma2_criticalCounter = 0;
 
-deleteLocation carma2_object;
 carma2_object = createLocation ["CarmaType", [-10000,-10000,-10000], 0, 0];
 carma2_object setText "carma2_obj";
 
-carma2_object setVariable ["__id", -1];
-carma2_object setVariable ["__handles", []];
-carma2_object setVariable ["__prototype", objNull];
 
 
 
@@ -129,5 +125,9 @@ carma2_fnc_spawnWrapperInternal = {
 {
     "carma_dll" callExtension ("0" + _x);
 } forEach (supportInfo "");
+
+///////////////////////!!ALWAYS FIRST!!///////////////////////////
+CARMA_COMPILE("\x\carma2\rv\addons\lib\lib_carma2_object.sqf");
+/////////////////////////////////////////////////////////////////
 
 CARMA_COMPILE("\x\carma2\rv\addons\lib\lib_carma2_hashmap.sqf");
