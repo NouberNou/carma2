@@ -6,6 +6,23 @@ carma.CUnit = new carma_object();
 // So we have a local stored version that is shorter named
 private _cunit = carma.CUnit;
 
+_cunit.execTests = function(_tests) {
+    private _res = carma.CUnit.testAll(_tests);
+    private _ret = 0;
+    {
+        _x params ["_sum", "_success", "_failure", "_inconclusive", "_testResults"];
+        {
+            _x params ["_testName", "_passed", "_messages"];
+            diag_log text format["%1", _testName];
+            { diag_log text format["%1", _x]; } forEach _messages;
+        } forEach _testResults;
+        diag_log text format["Ran tests %1", _sum];
+        diag_log text format["Passed: %1, Failed: %2, ", _success, _failure];
+        if (_failure > 0) then { _ret = _ret + 1 };
+    } forEach _res;
+    _ret;
+};
+
 _cunit.testAll = function(_tests) {
     private _testRunResults = [];
     {
