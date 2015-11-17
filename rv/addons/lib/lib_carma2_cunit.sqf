@@ -9,7 +9,7 @@ private _cunit = carma.CUnit;
 _cunit.testAll = function(_tests) {
     private _testRunResults = [];
     {
-        _testRunResults pushback (_thisObj.test(_x));
+        _testRunResults pushback (carma.CUnit.test(_x));
     } forEach _tests;
 
     _testRunResults;
@@ -33,8 +33,9 @@ _cunit.test = function(_object) {
     private _failure = 0;
     private _inconclusive = 0;
 
-    private _allTests = _thisObj.findAllTests(_object);
+    private _allTests = carma.CUnit.findAllTests(_object);
     if (isNil "_allTests") then { _allTests = [] };
+
     private _testResults = [];
     {
         try {
