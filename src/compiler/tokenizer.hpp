@@ -45,5 +45,6 @@ namespace carma {
 		bool is_reserved_word(std::string input_);
 
 		void clean_token_list(token_list &tokens_);
+        bool isNumber(const std::string& input);
 	}
 };

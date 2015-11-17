@@ -1,4 +1,5 @@
 #include "tokenizer.hpp"
+#include "rules/script_commands.hpp"
 #include <regex>
 
 namespace carma {
@@ -40,7 +41,12 @@ namespace carma {
 							if (!is_comment_line && !is_comment_block) {
 								token new_token;
 								new_token.val = token_str;
-								new_token.type = type::LITERAL;
+                                if (isNumber(token_str)) {
+                                    new_token.type = type::SCALAR;
+                                }
+                                else {
+                                    new_token.type = type::LITERAL;
+                                }
 								new_token.streamPos = stream_pos - token_str.length();
 								token_stream.push_back(new_token);
 							}
@@ -199,6 +205,7 @@ namespace carma {
 					}
 				}
 			}
+            script_commandParser::addScriptCommand(input_);
 		}
 
 		bool is_reserved_word(std::string input_) {
@@ -218,5 +225,12 @@ namespace carma {
 			}
 			tokens_ = clean_tokens;
 		}
+
+        bool isNumber(const std::string& input) {
+            if (input.length() > 0) {
+                return isdigit(input[0]);                
+            }
+            return true;            
+        }
 	}
 }

@@ -35,15 +35,15 @@ namespace carma {
 
 int main(int argc, char **argv) {
 	uint32_t arg_index = 1;
-	if (argc < 2) {
-		std::cout << "Usage: cli.exe [-p] [-o output.sqf] [-r reserved_words.txt] input.sqf\n";
-		return 0;
-	}
-	std::string input_filename(argv[argc - 1]);
-	std::string output_filename = "carma2_sqf_.sqf";
-	std::string reserved_words_filename = "";
+	//if (argc < 2) {
+	//	std::cout << "Usage: cli.exe [-p] [-o output.sqf] [-r reserved_words.txt] input.sqf\n";
+	//	return 0;
+	//}
+	std::string input_filename = "C:\\dev\\carma2\\tools\\test.sqf";
+	std::string output_filename = "C:\\dev\\carma2\\tools\\carma2_sqf_.sqf";
+	std::string reserved_words_filename = "C:\\dev\\carma2\\tools\\support_info.txt";
 	bool do_pretty = false;
-	for (arg_index; arg_index < argc - 1; ++arg_index) {
+	/*for (arg_index; arg_index < argc - 1; ++arg_index) {
 		std::string arg(argv[arg_index]);
 		switch (carma::cli::find_arg_code(arg)) {
 		case carma::cli::arg_options::output_file:
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 			do_pretty = true;
 			break;
 		};
-	}
+	}*/
 
 	if (reserved_words_filename != "") {
 		std::ifstream reserved_words_file(reserved_words_filename);

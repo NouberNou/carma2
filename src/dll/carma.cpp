@@ -25,7 +25,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 
 	switch (command_code) {
 	case COMMAND_COMPILE: {
-		std::string output_str = carma::process::process_input(value);
+		std::string output_str = carma::process::process_input(value, false, true);
 
 		if (file_id > 0) {
 			std::stringstream old_filename;
