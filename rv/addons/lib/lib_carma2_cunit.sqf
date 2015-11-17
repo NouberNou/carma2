@@ -15,9 +15,17 @@ _cunit.testAll = function(_tests) {
     _testRunResults;
 };
 
-_cunit.findAllTests = {
-    params ["_object"];
-    _object getVariable "tests";
+_cunit.findAllTests = function(_object) {
+    private _tests = [];
+    {
+        private _var = _object getvariable _x;
+        // Collect all functions starting with test.
+        if (!isNil "_var" && typeName _var == "CODE" && _x select [0,4] == "test") then {
+            _tests pushback _x;
+        };
+    } forEach allVariables _object;
+
+    _tests;
 };
 
 _cunit.test = function(_object) {
