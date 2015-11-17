@@ -7,6 +7,8 @@
 namespace carma {
 	namespace compiler {
 
+		int return_ok_flag = 0;
+
 		void process_accessors(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
 			for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
@@ -136,7 +138,9 @@ namespace carma {
 						if (definition_end_token->val == "]" || definition_end_token->val == "}" || definition_end_token->val == ")")
 							block_counter--;
 					}
+					return_ok_flag++;
 					process_accessors(tokens_, definition_start_token, definition_end_token);
+					return_ok_flag--;
 					std::string definition_string = build_string(tokens_, definition_start_token, definition_end_token);
 					for (auto clear_token = --definition_start_token; clear_token != definition_end_token; ++clear_token) {
 						clear_token->type = carma::type::EMPTY;
@@ -156,13 +160,52 @@ namespace carma {
 								params_string << ", ";
 						}
 
-						current_token->val = "{ params [" + params_string.str() + "]; " + definition_string + " }";
+						current_token->val = "{ scopeName \"____carma2_main_scope\"; params [" + params_string.str() + "]; " + definition_string + " }";
 					}
 					else {
-						current_token->val = "{ " + definition_string + " }";
+						current_token->val = "{ scopeName \"____carma2_main_scope\"; " + definition_string + " }";
 					}
 					current_token->type = carma::type::LITERAL;
 					current_token--;
+					continue;
+				}
+
+				if (current_token->val == "return") {
+					if (return_ok_flag <= 0)
+						continue; // @TODO: throw an error here because return statements are only allowed inside function() defined methods.
+					auto return_token = std::next(current_token);
+					if (return_token == tokens_.end())
+						continue;
+					if (return_token->type == carma::type::LITERAL) {
+						uint32_t block_counter = 0;
+						auto return_token_end = return_token;
+						if (return_token_end == end_entry_)
+							continue; // @TODO: this should be a syntax error, hanging ( operator.
+
+						auto return_token_start = return_token_end;
+
+						for (return_token_end; return_token_end != end_entry_ && (return_token_end->val != ";" || block_counter > 0); ++return_token_end) {
+							if (return_token_end->type == carma::type::EMPTY)
+								continue;
+							if (return_token_end->val == "[" || return_token_end->val == "{" || return_token_end->val == "(")
+								block_counter++;
+							if (return_token_end->val == "]" || return_token_end->val == "}" || return_token_end->val == ")")
+								block_counter--;
+						}
+
+						process_accessors(tokens_, return_token_start, return_token_end);
+						std::string return_string = build_string(tokens_, return_token_start, return_token_end);
+						for (auto clear_token = return_token_start; clear_token != return_token_end; ++clear_token) {
+							clear_token->type = carma::type::EMPTY;
+						}
+
+						return_token->type = carma::type::EMPTY;
+						current_token->type = carma::type::EMPTY;
+						--return_token_end;
+						return_token_end->type = carma::type::UNKNOWN;
+						return_token_end->val = "((" + return_string + ") breakOut \"____carma2_main_scope\")";
+						current_token = return_token_end;
+					}
 					continue;
 				}
 
