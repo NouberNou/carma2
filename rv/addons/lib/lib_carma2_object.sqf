@@ -7,7 +7,7 @@ carma2_object.__prototype = objNull;
 
 carma2_object.__isTypeOf = {
     params ["_type"];
-    private _found = false
+    private _found = false;
     private _check = _thisObj;
     while {_check != objNull} do {
         if(_check == _type) exitWith {
