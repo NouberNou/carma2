@@ -70,7 +70,7 @@ The `CARMA_COMPILE` macro is a macro to `carma2_fnc_compile`. If you just wish t
 
 If you are familiar with Javascript you will know that all function definitions start with the `function` keyword. While this is not required in carma code, it does give you some added benefits.
 
-For example, if you use the `function` keyword with arguments, like `function(_arg1, _arg2, _arg3)` it will place in the following function definition a correctly formatted SQF params statement. You can even define optional arguments. A full example is given below.
+For example, if you use the `function` keyword with arguments, like `function(_arg1, _arg2, _arg3)` it will place in the following function definition a correctly formatted SQF `params` statement. You can even define optional arguments. A full example is given below.
 
 ```
 // defining arguments with the function keyword
@@ -121,7 +121,7 @@ The variable `_result` contains the return value of the function, instead of the
 
 You do not specifically have to use the `function` keyword for IIFE to be done, raw code blocks are also able to be invoked right after definition.
 
-###Pseudo-static Members with :: Operator
+###Pseudo-static Members with `::` Operator
 
 Using the `::` operator you can easily access a objects prototype members/methods, the same as above using the `__prototype` member.
 
@@ -237,7 +237,7 @@ Passing an object to a SQF function or a carma2 object method can be done anonym
 _myObject.method(new subObject());
 ```
 
-###Array [] Accessors
+###Array `[]` Accessors
 
 Arrays can now be accessed and manipulated via the more traditional `[]` operator as in other languages.
 
@@ -276,7 +276,7 @@ my_func = { player sideChat format["this: %1", _this]; };
 my_func(1,2,3); // prints "this: [1,2,3]"
 ```
 
-###String Member Accessor {}
+###String Member Accessor `{}`
 
 Using the `{}` operator you can access member variables using strings.
 ```
