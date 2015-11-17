@@ -69,6 +69,103 @@ namespace carma {
 					continue;
 				}
 
+				if (current_token->val == "function") {
+					auto arg_start_token = std::next(current_token);
+					if (arg_start_token == tokens_.end())
+						continue;
+					if (arg_start_token->val != "(")
+						continue; // @TODO: throw a syntax error
+					arg_start_token->type = carma::type::EMPTY;
+					arg_start_token = std::next(arg_start_token);
+					if (arg_start_token == tokens_.end())
+						continue;
+
+					token_entry arg_token = arg_start_token;
+					typedef std::pair<std::string, std::string> arg_entry;
+					std::list<arg_entry> args;
+
+					for (arg_token; arg_token != end_entry_ && (arg_token->val != ")"); ++arg_token) {
+						if (arg_token->type == carma::type::EMPTY)
+							continue;
+						if (arg_token->type != carma::type::LITERAL)
+							continue; // @TODO: throw an error, non-literal var name in function arguments
+						if(arg_token->val.substr(0,1) != "_")
+							continue; // @TODO: throw an error, non-local var name in function arguments
+
+						auto test_token = std::next(arg_token);
+						if (test_token == tokens_.end())
+							continue;
+						if (test_token->val == "," || test_token->val == ")") {
+							args.push_back(arg_entry(arg_token->val, ""));
+						}
+						else if (test_token->val == "=") {
+							uint32_t block_counter = 0;
+							token_entry val_token_start = std::next(test_token);
+							if (val_token_start == tokens_.end())
+								continue;
+							token_entry val_token_end = val_token_start;;
+							for (val_token_end; val_token_end != end_entry_ && ((val_token_end->val != "," && val_token_end->val != ")") || block_counter > 0); ++val_token_end) {
+								if (val_token_end->val == "[" || val_token_end->val == "{" || val_token_end->val == "(")
+									block_counter++;
+								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
+									block_counter--;
+							}
+							process_accessors(tokens_, val_token_start, val_token_end);
+							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
+							args.push_back(arg_entry(arg_token->val, val_string));
+						}
+
+					}
+					++arg_token;
+					for (auto clear_token = arg_start_token; clear_token != arg_token; ++clear_token) {
+						clear_token->type = carma::type::EMPTY;
+					}
+
+					token_entry definition_start_token = arg_token;
+					if (definition_start_token->val != "{")
+						continue;
+					definition_start_token = ++arg_token;
+					if (definition_start_token == tokens_.end())
+						continue;
+
+					uint32_t block_counter = 0;
+					token_entry definition_end_token = definition_start_token;
+					for (definition_end_token; definition_end_token != end_entry_ && (definition_end_token->val != "}" || block_counter > 0); ++definition_end_token) {
+						if (definition_end_token->val == "[" || definition_end_token->val == "{" || definition_end_token->val == "(")
+							block_counter++;
+						if (definition_end_token->val == "]" || definition_end_token->val == "}" || definition_end_token->val == ")")
+							block_counter--;
+					}
+					process_accessors(tokens_, definition_start_token, definition_end_token);
+					std::string definition_string = build_string(tokens_, definition_start_token, definition_end_token);
+					for (auto clear_token = --definition_start_token; clear_token != definition_end_token; ++clear_token) {
+						clear_token->type = carma::type::EMPTY;
+					}
+					current_token->type = carma::type::EMPTY;
+					current_token = definition_end_token;
+					if (args.size() > 0) {
+						std::stringstream params_string;
+						for (auto param_entry = args.begin(); param_entry != args.end(); ++param_entry) {
+							if (param_entry->second != "") {
+								params_string << "[\"" << param_entry->first << "\", " << param_entry->second << "]";
+							}
+							else {
+								params_string << "\"" + param_entry->first + "\"";
+							}
+							if (std::next(param_entry) != args.end())
+								params_string << ", ";
+						}
+
+						current_token->val = "{ params [" + params_string.str() + "]; " + definition_string + " }";
+					}
+					else {
+						current_token->val = "{ " + definition_string + " }";
+					}
+					current_token->type = carma::type::LITERAL;
+					current_token--;
+					continue;
+				}
+
 				if (current_token->val == "del") {
 					auto object_token = std::next(current_token);
 					if (object_token == tokens_.end())
