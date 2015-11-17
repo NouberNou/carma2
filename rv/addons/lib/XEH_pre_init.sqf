@@ -18,10 +18,10 @@ carma2_fnc_callCritical = {
     private _counter = carma2_criticalCounter;
     carma2_criticalCounter = carma2_criticalCounter + 1;
     carma2_criticalArgs set[_counter, _args];
-    
-    // Execute the critical code     
+
+    // Execute the critical code
     format["[%1] call %2; false;", _counter, _function] configClasses (configfile >> "CarmaBlank");
-    
+
     private _return = carma2_criticalArgs select _counter;
     carma2_criticalCounter = carma2_criticalCounter - 1;
     _return;
@@ -131,3 +131,4 @@ CARMA_COMPILE("\x\carma2\rv\addons\lib\lib_carma2_object.sqf");
 /////////////////////////////////////////////////////////////////
 
 CARMA_COMPILE("\x\carma2\rv\addons\lib\lib_carma2_hashmap.sqf");
+CARMA_COMPILE("\x\carma2\rv\addons\lib\lib_carma2_cunit.sqf");
