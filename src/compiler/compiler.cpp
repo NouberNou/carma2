@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
+#include <ctype.h>
 
 namespace carma {
 	namespace compiler {
@@ -254,6 +255,9 @@ namespace carma {
 					std::next(current_token)->val == "{" 
 					)) {
 					if (std::next(current_token)->val == "." || std::next(current_token)->val == "::") {
+                        if (isNumber(current_token->val))
+                            continue;
+
 						auto object_token = current_token;
 						auto dot_token = std::next(current_token);
 						auto member_token = std::next(current_token, 2);
@@ -728,5 +732,12 @@ namespace carma {
 
 			return minimized_tokens;
 		}
+
+        bool isNumber(const std::string& input) {
+            if (input.length() > 0) {
+                return isdigit(input[0]);
+            }
+            return true;
+        }
 	}
 };
