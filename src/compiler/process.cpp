@@ -7,8 +7,11 @@ namespace carma {
 
 			//process_new_keyword(tokens, tokens.begin(), tokens.end());
 			//clean_token_list(tokens);
-			process_accessors(tokens, tokens.begin(), tokens.end());
+			process_pass_1(tokens, tokens.begin(), tokens.end());
 			clean_token_list(tokens);
+			tokens = tokenize(build_string_pretty(tokens, tokens.begin(), tokens.end()));
+			block root_block;
+			process_pass_2(tokens, tokens.begin(), tokens.end(), root_block);
 			//process_method_calls(tokens, tokens.begin());
 			//clean_token_list(tokens);
 			//process_simple_assigments(tokens, tokens.begin());
@@ -23,6 +26,8 @@ namespace carma {
 			//tokens = tokenize(build_string(tokens));
 			//process_del_keyword(tokens, tokens.begin());
 			//tokens = minimize(tokens, tokens.begin(), tokens.end());
+
+			
 
 
 

@@ -8,8 +8,10 @@ namespace carma {
 	namespace compiler {
 
 		int return_ok_flag = 0;
+		int block_depth = 0;
 
-		void process_accessors(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
+
+		void process_pass_1(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
 			for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
 				if (current_token->type == carma::type::EMPTY)
 					continue;
@@ -34,7 +36,7 @@ namespace carma {
 								block_counter--;
 						}
 
-						process_accessors(tokens_, obj_token_start, obj_token_end);
+						process_pass_1(tokens_, obj_token_start, obj_token_end);
 						std::string obj_string = build_string(tokens_, obj_token_start, obj_token_end);
 						for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -55,7 +57,7 @@ namespace carma {
 								block_counter--;
 						}
 
-						process_accessors(tokens_, arg_token_start, arg_token_end);
+						process_pass_1(tokens_, arg_token_start, arg_token_end);
 						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
 						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -65,7 +67,13 @@ namespace carma {
 						object_token->type = carma::type::EMPTY;
 						current_token->type = carma::type::EMPTY;
 						arg_token_end->type = carma::type::FUNCTIONCALL;
-						arg_token_end->val = "([[" + arg_string + "], " + obj_string + ", _thisScript] call carma2_fnc_newObject)";
+						//arg_token_end->val = "([[" + arg_string + "], " + obj_string + ", _thisScript] call carma2_fnc_newObject)";
+						if (arg_string != "") {
+							arg_token_end->val = "@CARMA_NEW_OBJECT(" + obj_string + "," + arg_string + ")";
+						}
+						else {
+							arg_token_end->val = "@CARMA_NEW_OBJECT(" + obj_string + ")";
+						}
 						current_token = --arg_token_end;
 					}
 					continue;
@@ -112,7 +120,7 @@ namespace carma {
 								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
 									block_counter--;
 							}
-							process_accessors(tokens_, val_token_start, val_token_end);
+							process_pass_1(tokens_, val_token_start, val_token_end);
 							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
 							args.push_back(arg_entry(arg_token->val, val_string));
 						}
@@ -139,7 +147,7 @@ namespace carma {
 							block_counter--;
 					}
 					return_ok_flag++;
-					process_accessors(tokens_, definition_start_token, definition_end_token);
+					process_pass_1(tokens_, definition_start_token, definition_end_token);
 					return_ok_flag--;
 					std::string definition_string = build_string(tokens_, definition_start_token, definition_end_token);
 					for (auto clear_token = --definition_start_token; clear_token != definition_end_token; ++clear_token) {
@@ -160,10 +168,12 @@ namespace carma {
 								params_string << ", ";
 						}
 
-						current_token->val = "{ scopeName \"____carma2_main_scope\"; params [" + params_string.str() + "]; " + definition_string + " }";
+						//current_token->val = "{ scopeName \"____carma2_main_scope\"; params [" + params_string.str() + "]; " + definition_string + " }";
+						current_token->val = "@CARMA_FUNCTION_DEFINITION(" + definition_string + "," + params_string.str() + ")";
 					}
 					else {
-						current_token->val = "{ scopeName \"____carma2_main_scope\"; " + definition_string + " }";
+						//current_token->val = "{ scopeName \"____carma2_main_scope\"; " + definition_string + " }";
+						current_token->val = "@CARMA_FUNCTION_DEFINITION(" + definition_string + ")";
 					}
 					current_token->type = carma::type::LITERAL;
 					current_token--;
@@ -193,7 +203,7 @@ namespace carma {
 								block_counter--;
 						}
 
-						process_accessors(tokens_, return_token_start, return_token_end);
+						process_pass_1(tokens_, return_token_start, return_token_end);
 						std::string return_string = build_string(tokens_, return_token_start, return_token_end);
 						for (auto clear_token = return_token_start; clear_token != return_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -203,7 +213,8 @@ namespace carma {
 						current_token->type = carma::type::EMPTY;
 						--return_token_end;
 						return_token_end->type = carma::type::UNKNOWN;
-						return_token_end->val = "((" + return_string + ") breakOut \"____carma2_main_scope\")";
+						//return_token_end->val = "((" + return_string + ") breakOut \"____carma2_main_scope\")";
+						return_token_end->val = "@CARMA_RETURN(" + return_string + ")";
 						current_token = return_token_end;
 					}
 					continue;
@@ -230,7 +241,7 @@ namespace carma {
 								block_counter--;
 						}
 
-						process_accessors(tokens_, obj_token_start, obj_token_end);
+						process_pass_1(tokens_, obj_token_start, obj_token_end);
 						std::string obj_string = build_string(tokens_, obj_token_start, obj_token_end);
 						for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -240,7 +251,8 @@ namespace carma {
 						current_token->type = carma::type::EMPTY;
 						--obj_token_end;
 						obj_token_end->type = carma::type::UNKNOWN;
-						obj_token_end->val = "([" + obj_string + "] call carma2_fnc_delObject)";
+						//obj_token_end->val = "([" + obj_string + "] call carma2_fnc_delObject)";
+						obj_token_end->val = "@CARMA_DEL(" + obj_string + ")";
 						current_token = obj_token_end;
 					}
 					continue;
@@ -265,10 +277,12 @@ namespace carma {
 							dot_token->type = carma::type::EMPTY;
 							member_token->type = carma::type::MEMBERACCESSOR;
 							if (dot_token->val == ".") {
-								member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
+								//member_token->val = "(" + object_token->val + " getVariable \"" + member_token->val + "\")";
+								member_token->val = "@CARMA_DOT_OPERATOR(" + object_token->val + "," + member_token->val + ")";
 							}
 							else {
-								member_token->val = "((" + object_token->val + " getVariable \"__prototype\") getVariable \"" + member_token->val + "\")";
+								//member_token->val = "((" + object_token->val + " getVariable \"__prototype\") getVariable \"" + member_token->val + "\")";
+								member_token->val = "@CARMA_STATIC_OPERATOR(" + object_token->val + "," + member_token->val + ")";
 							}
 							current_token = --member_token;
 						}
@@ -287,7 +301,7 @@ namespace carma {
 								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
 									block_counter--;
 							}
-							process_accessors(tokens_, val_token_start, val_token_end);
+							process_pass_1(tokens_, val_token_start, val_token_end);
 							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
 							for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
 								clear_token->type = carma::type::EMPTY;
@@ -299,10 +313,12 @@ namespace carma {
 							--val_token_end;
 							val_token_end->type = carma::type::ARRAYACCESSOR;
 							if (dot_token->val == ".") {
-								val_token_end->val = "(" + object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "])";
+								//val_token_end->val = "(" + object_token->val + " setVariable [\"" + member_token->val + "\", " + val_string + "])";
+								val_token_end->val = "@CARMA_DOT_ASSIGNMENT(" + object_token->val + "," + member_token->val + "," + val_string + ")";
 							}
 							else {
-								val_token_end->val = "((" + object_token->val + " getVariable \"__prototype\") setVariable [\"" + member_token->val + "\", " + val_string + "])";
+								//val_token_end->val = "((" + object_token->val + " getVariable \"__prototype\") setVariable [\"" + member_token->val + "\", " + val_string + "])";
+								val_token_end->val = "@CARMA_STATIC_ASSIGNMENT(" + object_token->val + "," + member_token->val + "," + val_string + ")";
 							}
 							current_token = val_token_end;
 						}
@@ -325,7 +341,7 @@ namespace carma {
 							}
 
 
-							process_accessors(tokens_, arg_token_start, arg_token_end);
+							process_pass_1(tokens_, arg_token_start, arg_token_end);
 							std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
 							for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 								clear_token->type = carma::type::EMPTY;
@@ -336,32 +352,26 @@ namespace carma {
 							following_token->type = carma::type::EMPTY;
 							arg_token_end->type = carma::type::METHODCALL;
 							/*
-							This could be made more simple probably, but eh for now.
-
 							@TODO: In the future make these definable in SQF via some sort of registry and dynamically called/overridable.
 							*/
-							if (member_token->val == "__call") {
+							if (arg_string != "") {
 								if (dot_token->val == ".") {
-									arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_methodInvokeContext)";
+									//arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+									arg_token_end->val = "@CARMA_DOT_INVOKE(" + object_token->val + "," + member_token->val + "," + arg_string + ")";
 								}
 								else {
-									arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_methodInvokeContext)";
-								}
-							} 
-							else if (member_token->val == "__apply") {
-								if (dot_token->val == ".") {
-									arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_methodApplyContext)";
-								}
-								else {
-									arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_methodApplyContext)";
+									//arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+									arg_token_end->val = "@CARMA_STATIC_INVOKE(" + object_token->val + "," + member_token->val + "," + arg_string + ")";
 								}
 							}
 							else {
 								if (dot_token->val == ".") {
-									arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+									//arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+									arg_token_end->val = "@CARMA_DOT_INVOKE(" + object_token->val + "," + member_token->val + ")";
 								}
 								else {
-									arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+									//arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+									arg_token_end->val = "@CARMA_STATIC_INVOKE(" + object_token->val + "," + member_token->val + ")";
 								}
 							}
 							current_token = --arg_token_end;
@@ -395,7 +405,7 @@ namespace carma {
 						}
 						
 						
-						process_accessors(tokens_, arg_token_start, arg_token_end);
+						process_pass_1(tokens_, arg_token_start, arg_token_end);
 						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
 						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -412,7 +422,8 @@ namespace carma {
 
 						if (!is_assignment) {
 							arg_token_end->type = carma::type::ARRAYACCESSOR;
-							arg_token_end->val = "(" + object_token->val + " select " + arg_string + ")";
+							//arg_token_end->val = "(" + object_token->val + " select " + arg_string + ")";
+							arg_token_end->val = "@CARMA_ARRAY_ACCESSOR(" + object_token->val + "," + arg_string + ")";
 							current_token = --arg_token_end;
 						}
 						else {
@@ -430,7 +441,7 @@ namespace carma {
 								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
 									block_counter--;
 							}
-							process_accessors(tokens_, val_token_start, val_token_end);
+							process_pass_1(tokens_, val_token_start, val_token_end);
 							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
 							for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
 								clear_token->type = carma::type::EMPTY;
@@ -439,7 +450,8 @@ namespace carma {
 							following_token->type = carma::type::EMPTY;
 							--val_token_end;
 							val_token_end->type = carma::type::ARRAYACCESSOR;
-							val_token_end->val = "(" + object_token->val + " set [" + arg_string + ", " + val_string + "])";
+							//val_token_end->val = "(" + object_token->val + " set [" + arg_string + ", " + val_string + "])";
+							val_token_end->val = "@CARMA_ARRAY_ASSIGNMENT(" + object_token->val + "," + val_string + "," + arg_string + ")";
 							current_token = val_token_end;
 						}
 					}
@@ -471,7 +483,7 @@ namespace carma {
 						}
 
 
-						process_accessors(tokens_, arg_token_start, arg_token_end);
+						process_pass_1(tokens_, arg_token_start, arg_token_end);
 						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
 						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -488,7 +500,8 @@ namespace carma {
 
 						if (!is_assignment) {
 							arg_token_end->type = carma::type::ARRAYACCESSOR;
-							arg_token_end->val = "(" + object_token->val + " getVariable " + arg_string + ")";
+							//arg_token_end->val = "(" + object_token->val + " getVariable " + arg_string + ")";
+							arg_token_end->val = "@CARMA_HASHMAP_ACCESSOR(" + object_token->val + "," + arg_string + ")";
 							current_token = --arg_token_end;
 						}
 						else {
@@ -506,7 +519,7 @@ namespace carma {
 								if (val_token_end->val == "]" || val_token_end->val == "}" || val_token_end->val == ")")
 									block_counter--;
 							}
-							process_accessors(tokens_, val_token_start, val_token_end);
+							process_pass_1(tokens_, val_token_start, val_token_end);
 							std::string val_string = build_string(tokens_, val_token_start, val_token_end);
 							for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
 								clear_token->type = carma::type::EMPTY;
@@ -515,7 +528,8 @@ namespace carma {
 							following_token->type = carma::type::EMPTY;
 							--val_token_end;
 							val_token_end->type = carma::type::ARRAYACCESSOR;
-							val_token_end->val = "(" + object_token->val + " setVariable [" + arg_string + ", " + val_string + "])";
+							//val_token_end->val = "(" + object_token->val + " setVariable [" + arg_string + ", " + val_string + "])";
+							val_token_end->val = "@CARMA_HASHMAP_ASSIGNMENT(" + object_token->val + "," + arg_string + "," + val_string + ")";
 							current_token = val_token_end;
 						}
 					}
@@ -546,7 +560,7 @@ namespace carma {
 						}
 
 
-						process_accessors(tokens_, arg_token_start, arg_token_end);
+						process_pass_1(tokens_, arg_token_start, arg_token_end);
 						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
 						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 							clear_token->type = carma::type::EMPTY;
@@ -554,87 +568,26 @@ namespace carma {
 						function_token->type = carma::type::EMPTY;
 						paren_token->type = carma::type::EMPTY;
 						arg_token_end->type = carma::type::FUNCTIONCALL;
-						arg_token_end->val = "([" + arg_string + "] call " + function_token->val + ")";
+						//arg_token_end->val = "([" + arg_string + "] call " + function_token->val + ")";
+						if (arg_string != "") {
+							arg_token_end->val = "@CARMA_FUNCTION_CALL(" + function_token->val + "," + arg_string + ")";
+						}
+						else {
+							arg_token_end->val = "@CARMA_FUNCTION_CALL(" + function_token->val + ")";
+						}
 						current_token = --arg_token_end;
 					}
 				}
 			}
 		}
 
-		void process_new_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
-			for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
-				if (current_token->type == carma::type::EMPTY)
-					continue;
-				if (current_token->val == "new") {
-					auto object_token = std::next(current_token);
-					if (object_token == tokens_.end())
-						continue;
-					auto next_token = std::next(current_token, 2);
-					if (next_token == tokens_.end())
-						continue;
-					if (next_token->val == "(") {
-						uint32_t block_counter = 0;
-						auto arg_token_end = std::next(next_token);
-						if (arg_token_end == end_entry_)
-							continue; // @TODO: this should be a syntax error, hanging ( operator.
-
-						auto arg_token_start = arg_token_end;
-
-						for (arg_token_end; arg_token_end != end_entry_ && (arg_token_end->val != ")" || block_counter > 0); ++arg_token_end) {
-							if (arg_token_end->type == carma::type::EMPTY)
-								continue;
-							if (arg_token_end->val == "[" || arg_token_end->val == "{" || arg_token_end->val == "(")
-								block_counter++;
-							if (arg_token_end->val == "]" || arg_token_end->val == "}" || arg_token_end->val == ")")
-								block_counter--;
-						}
-
-
-						process_new_keyword(tokens_, arg_token_start, arg_token_end);
-						std::string arg_string = build_string(tokens_, arg_token_start, arg_token_end);
-						for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
-							clear_token->type = carma::type::EMPTY;
-						}
-						object_token->type = carma::type::EMPTY;
-						next_token->type = carma::type::EMPTY;
-						current_token->type = carma::type::EMPTY;
-						arg_token_end->type = carma::type::FUNCTIONCALL;
-						arg_token_end->val = "([[" + arg_string + "], " + object_token->val + ", _thisScript] call carma2_fnc_newObject)";
-						current_token = --arg_token_end;
-					}
+		void process_pass_2(token_list &tokens_, token_entry start_entry_, token_entry end_entry_, block &parent_) {
+			for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
+				if (current_token->val.substr(0, 6) == "@CARMA") {
+					block child_block;
+					child_block.type = current_token->val.substr(7);
 				}
 			}
-		}
-
-		void process_spawn_keyword(token_list &tokens_, token_entry start_entry_, token_entry end_entry_) {
-			/*for (token_entry current_token = start_entry_; current_token != tokens_.end(); ++current_token) {
-				if (current_token->type == carma::type::EMPTY)
-					continue;
-				if (current_token->val == "spawn") {
-					token_entry value_token = std::next(current_token);
-					if (value_token == tokens_.end())
-						continue;
-					uint32_t block_counter = 0;
-					token_list value_tokens;
-					for (value_token; value_token != tokens_.end() && (value_token->val != ";" || block_counter > 0); ++value_token) {
-						if (value_token->type == carma::type::EMPTY)
-							continue;
-						if (value_token->val == "[" || value_token->val == "{" || value_token->val == "(")
-							block_counter++;
-						if (value_token->val == "]" || value_token->val == "}" || value_token->val == ")")
-							block_counter--;
-						if (value_token->val == "spawn") {
-							process_spawn_keyword(tokens_, value_token);
-						}
-						value_tokens.push_back(*value_token);
-						value_token->type = carma::type::EMPTY;
-					}
-					std::string value_string = build_string(value_tokens);
-					current_token->type = carma::type::EMPTY;
-					std::prev(value_token)->type = carma::type::UNKNOWN;	
-					std::prev(value_token)->val = " call { [_this, " + value_string + "] call carma2_fnc_spawnWrapper; }";
-				}
-			}*/
 		}
 
 		std::string build_string(const token_list &tokens_, const token_entry start_entry_, const token_entry end_entry_) {
