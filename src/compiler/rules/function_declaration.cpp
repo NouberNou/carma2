@@ -141,7 +141,7 @@ void carma::rules::function_declaration::return_keyword(carma::compiler::context
 
         // Set up our return string
         return_token_end->type = carma::type::UNKNOWN;
-        return_token_end->val = "((" + return_string + ") break_out \"____carma2_main_scope\")";
+        return_token_end->val = "((" + return_string + ") breakOut \"____carma2_main_scope\")";
         start_entry_ = return_token_end;
     }
 }
