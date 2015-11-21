@@ -61,7 +61,30 @@ namespace carma {
             }
             catch (std::exception& e) {
                 std::cout << e.what() << std::endl;
-                return "";
+                return "throw format['" + std::string(e.what()) +"'];";
+            } catch (CarmaInvalidContextException& e) {
+                std::cout << e.getMessage() << std::endl;
+                return "throw format['" + e.getMessage() + "'];";
+            }
+            catch (CarmaInvalidOperatorException& e) {
+                std::cout << e.getMessage() << std::endl;
+                return "throw format['" + e.getMessage() + "'];";
+            }
+            catch (CarmaMissingBracketException& e) {
+                std::cout << e.getMessage() << std::endl;
+                return "throw format['" + e.getMessage() + "'];";
+            }
+            catch (CarmaMissionQuotationException& e) {
+                std::cout << e.getMessage() << std::endl;
+                return "throw format['" + e.getMessage() + "'];";
+            }
+            catch (CarmaSyntaxErrorException& e) {
+                std::cout << e.getMessage() << std::endl;
+                return "throw format['" + e.getMessage() + "'];";
+            }
+            catch (CarmaUnkownException& e) {
+                std::cout << e.getMessage() << std::endl;
+                return "throw format['" + e.getMessage() + "'];";
             }
         }
 
