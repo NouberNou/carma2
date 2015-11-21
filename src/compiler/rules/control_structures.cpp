@@ -24,7 +24,7 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
     int block_counter = 0;
     bool hasEncounteredCondition = false;
 
-    // TODO validate that there is no wierd shit in between the if and the ().
+    // Validate that there is no wierd shit in between the if and the ().
     // example: if blaa () < should throw syntax error
     // if () < should throw syntax error, empty condition
     // if (true) < valid
