@@ -92,6 +92,17 @@ carma2_fnc_compile = {
     _result;
 };
 
+carma2_fnc_compileStr = {
+    params ["_string", ["_execute", true]];
+    private _text = "1" + _string;
+
+    private _result = (compile preprocessFileLineNumbers ("carma_dll" callExtension _text));
+    if (_execute) then {
+        [] call _result;
+    };
+    _result;
+};
+
 carma2_fnc_spawnWrapper = {
     [_this, "carma2_fnc_spawnWrapperInternal"] call carma2_fnc_callCritical;
 };
