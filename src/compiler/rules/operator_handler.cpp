@@ -10,7 +10,7 @@ carma::rules::operator_handler::~operator_handler()
 {
 }
 
-void carma::rules::operator_handler::dot_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::dot_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     auto object_token = start_entry_;
     auto dot_token = std::next(start_entry_);
     auto member_token = std::next(start_entry_, 2);
@@ -45,7 +45,7 @@ void carma::rules::operator_handler::dot_operator(carma::compiler::context& aSco
                 block_counter--;
         }
 
-        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
+        auto val_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
         for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
         }
@@ -81,7 +81,7 @@ void carma::rules::operator_handler::dot_operator(carma::compiler::context& aSco
                 block_counter--;
         }
 
-        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
+        auto val_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
         std::string arg_string = carma::compiler::build_string(tokens_, arg_token_start, arg_token_end);
         for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
@@ -98,33 +98,33 @@ void carma::rules::operator_handler::dot_operator(carma::compiler::context& aSco
         */
         if (member_token->val == "__call") {
             if (dot_token->val == ".") {
-                arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_methodInvokeContext)";
+                arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_method_invoke_context)";
             }
             else {
-                arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_methodInvokeContext)";
+                arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_method_invoke_context)";
             }
         }
         else if (member_token->val == "__apply") {
             if (dot_token->val == ".") {
-                arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_methodApplyContext)";
+                arg_token_end->val = "([" + object_token->val + ", [" + arg_string + "]] call carma2_fnc_method_apply_context)";
             }
             else {
-                arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_methodApplyContext)";
+                arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), [" + arg_string + "]] call carma2_fnc_method_apply_context)";
             }
         }
         else {
             if (dot_token->val == ".") {
-                arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+                arg_token_end->val = "([" + object_token->val + ", \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_method_invoke)";
             }
             else {
-                arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_methodInvoke)";
+                arg_token_end->val = "([(" + object_token->val + " getVariable \"__prototype\"), \"" + member_token->val + "\", [" + arg_string + "]] call carma2_fnc_method_invoke)";
             }
         }
         start_entry_ = --arg_token_end;
     }
 }
 
-void carma::rules::operator_handler::method_call_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::method_call_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
 
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
@@ -137,21 +137,21 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
 
     if (is_reserved_word(function_token->val)) { // handle script commands method invoke
 
-        std::string commandName = function_token->val;
+        std::string command_name = function_token->val;
 
         // If the command name is a control structure key word, skip
-        if (commandName == "if"
-            || commandName == "while"
-            || commandName == "then"
-            || commandName == "else"
-            || commandName == "do"
-            || commandName == "exitwith"
-            || commandName == "switch"
-            || commandName == "do"
-            || commandName == "from"
-            || commandName == "to"
-            || commandName == "case"
-            || commandName == "default"
+        if (command_name == "if"
+            || command_name == "while"
+            || command_name == "then"
+            || command_name == "else"
+            || command_name == "do"
+            || command_name == "exitwith"
+            || command_name == "switch"
+            || command_name == "do"
+            || command_name == "from"
+            || command_name == "to"
+            || command_name == "case"
+            || command_name == "default"
             ) return;
 
         auto paren_token = std::next(start_entry_);
@@ -163,16 +163,16 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
         // Check if we use our command as a method
         if (paren_token->val == "(") { // we got a method invoke
             if (arg_token_end->val == ")") { // No parameters given
-                if (script_commandParser::isscript_command(commandName, script_command::Type::NONE)) {
+                if (script_command_parser::isscript_command(command_name, script_command::Type::NONE)) {
                     // If this is a valid script command, we can just strip away our () tokens here
-                    std::string outputCommand = script_commandParser::getscript_command(commandName, script_command::Type::NONE).format();
-                    arg_token_end->val = outputCommand;
+                    std::string output_command = script_command_parser::getscript_command(command_name, script_command::Type::NONE).format();
+                    arg_token_end->val = output_command;
                     arg_token_end->type = carma::type::METHODCALL;
                     paren_token->type = carma::type::EMPTY;
                     start_entry_->type = carma::type::EMPTY;
                 }
                 else {
-                    throw carma::compiler::exception::syntax_error("Script command (" + commandName + ") with no parameters does not exist");
+                    throw carma::compiler::exception::syntax_error("Script command (" + command_name + ") with no parameters does not exist");
                 }
             }
             else { // Method invoke with parameters
@@ -188,10 +188,10 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
                         block_counter--;
                 }
                 // Recursively process the parameters inside the ( .. )
-                auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
+                auto val_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
 
                 // Convert our parameters into a vector
-                auto parameters = script_commandParser::getParameters(val_string);
+                auto parameters = script_command_parser::get_parameters(val_string);
 
                 // Clear the parameters from our output by emptying the tokens
                 for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
@@ -199,37 +199,37 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
                 }
 
                 if (parameters.size() == 1) { // If there is one parameter, try to use our command as an unary argument
-                    if (script_commandParser::isscript_command(commandName, script_command::Type::RIGHT)) {
-                        std::string outputCommand = script_commandParser::getscript_command(commandName, script_command::Type::RIGHT).format(parameters[0]);
+                    if (script_command_parser::isscript_command(command_name, script_command::Type::RIGHT)) {
+                        std::string output_command = script_command_parser::getscript_command(command_name, script_command::Type::RIGHT).format(parameters[0]);
                         paren_token->type = carma::type::EMPTY;
                         start_entry_->type = carma::type::EMPTY;
                         arg_token_end->type = carma::type::METHODCALL;
-                        arg_token_end->val = outputCommand;
+                        arg_token_end->val = output_command;
                         start_entry_ = --arg_token_end;
                     }
                     else {
-                        throw carma::compiler::exception::syntax_error("Script command (" + commandName + ") with one parameter does not exist");
+                        throw carma::compiler::exception::syntax_error("Script command (" + command_name + ") with one parameter does not exist");
                     }
                 }
                 else if (parameters.size() >= 2) { // If there is one parameter, try to use our command as a binary argument
-                    if (script_commandParser::isscript_command(commandName, script_command::Type::LEFT_RIGHT)) {
-                        std::string outputCommand = script_commandParser::getscript_command(commandName, script_command::Type::LEFT_RIGHT).format(parameters[0], parameters[1]);
+                    if (script_command_parser::isscript_command(command_name, script_command::Type::LEFT_RIGHT)) {
+                        std::string output_command = script_command_parser::getscript_command(command_name, script_command::Type::LEFT_RIGHT).format(parameters[0], parameters[1]);
                         paren_token->type = carma::type::EMPTY;
                         start_entry_->type = carma::type::EMPTY;
                         arg_token_end->type = carma::type::METHODCALL;
-                        arg_token_end->val = outputCommand;
+                        arg_token_end->val = output_command;
                         start_entry_ = --arg_token_end;
                     }
                     else {
                         // TODO syntax error
-                        throw carma::compiler::exception::syntax_error("Script command (" + commandName + ") with two parameters does not exist");
+                        throw carma::compiler::exception::syntax_error("Script command (" + command_name + ") with two parameters does not exist");
                     }
                 }
                 else { // Single parameter command - no parameters found. Just output the command name and we are done
                     paren_token->type = carma::type::EMPTY;
                     start_entry_->type = carma::type::EMPTY;
                     arg_token_end->type = carma::type::METHODCALL;
-                    arg_token_end->val = commandName;
+                    arg_token_end->val = command_name;
                     start_entry_ = --arg_token_end;
                 }
             }
@@ -252,7 +252,7 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
             block_counter--;
     }
 
-    auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
+    auto arg_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
     for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
         clear_token->type = carma::type::EMPTY;
     }
@@ -263,7 +263,7 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
     start_entry_ = --arg_token_end;
 }
 
-void carma::rules::operator_handler::array_access_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::array_access_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
@@ -271,24 +271,24 @@ void carma::rules::operator_handler::array_access_operator(carma::compiler::cont
         return;
     if (is_reserved_word(start_entry_->val))
     {
-        std::string commandName = start_entry_->val;
+        std::string command_name = start_entry_->val;
         // If the command name is a control structure key word, skip
-        if (commandName == "if"
-            || commandName == "while"
-            || commandName == "then"
-            || commandName == "else"
-            || commandName == "do"
-            || commandName == "exitwith"
-            || commandName == "switch"
-            || commandName == "do"
-            || commandName == "from"
-            || commandName == "to"
-            || commandName == "case"
-            || commandName == "default"
+        if (command_name == "if"
+            || command_name == "while"
+            || command_name == "then"
+            || command_name == "else"
+            || command_name == "do"
+            || command_name == "exitwith"
+            || command_name == "switch"
+            || command_name == "do"
+            || command_name == "from"
+            || command_name == "to"
+            || command_name == "case"
+            || command_name == "default"
             ) return;
 
         // Support Arma3 script commands with array accessors -> May need to add support for type filtering on return type value instead
-        if (!script_commandParser::isscript_command(commandName, script_command::Type::NONE)) {
+        if (!script_command_parser::isscript_command(command_name, script_command::Type::NONE)) {
             return;
         }
     }
@@ -311,7 +311,7 @@ void carma::rules::operator_handler::array_access_operator(carma::compiler::cont
             block_counter--;
     }
 
-    auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
+    auto arg_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
 
     for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
         clear_token->type = carma::type::EMPTY;
@@ -346,7 +346,7 @@ void carma::rules::operator_handler::array_access_operator(carma::compiler::cont
                 block_counter--;
         }
 
-        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
+        auto val_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
         for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
         }
@@ -359,7 +359,7 @@ void carma::rules::operator_handler::array_access_operator(carma::compiler::cont
     }
 }
 
-void carma::rules::operator_handler::member_access_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::member_access_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
@@ -386,7 +386,7 @@ void carma::rules::operator_handler::member_access_operator(carma::compiler::con
             block_counter--;
     }
 
-    auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
+    auto arg_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
     for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
         clear_token->type = carma::type::EMPTY;
     }
@@ -420,7 +420,7 @@ void carma::rules::operator_handler::member_access_operator(carma::compiler::con
                 block_counter--;
         }
 
-        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
+        auto val_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
         for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
         }

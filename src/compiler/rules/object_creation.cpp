@@ -12,7 +12,7 @@ carma::rules::object_creation::~object_creation()
 {
 }
 
-void carma::rules::object_creation::newObject(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::object_creation::new_object(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
     
     auto object_token = std::next(start_entry_);
     if (object_token == tokens_.end())
@@ -35,7 +35,7 @@ void carma::rules::object_creation::newObject(carma::compiler::context& aScope, 
 			    block_counter--;
 	    }
 
-        auto obj_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, obj_token_start, obj_token_end).compile();
+        auto obj_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, obj_token_start, obj_token_end).compile();
         
 	    for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
 		    clear_token->type = carma::type::EMPTY;
@@ -56,7 +56,7 @@ void carma::rules::object_creation::newObject(carma::compiler::context& aScope, 
 			    block_counter--;
 	    }
 
-        auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
+        auto arg_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
 
 	    for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 		    clear_token->type = carma::type::EMPTY;
@@ -66,17 +66,17 @@ void carma::rules::object_creation::newObject(carma::compiler::context& aScope, 
 	    object_token->type = carma::type::EMPTY;
         start_entry_->type = carma::type::EMPTY;
 	    arg_token_end->type = carma::type::FUNCTIONCALL;
-	    arg_token_end->val = "([[" + arg_string + "], " + obj_string + ", _thisScript] call carma2_fnc_newObject)";
+	    arg_token_end->val = "([[" + arg_string + "], " + obj_string + ", _this_script] call carma2_fnc_new_object)";
         start_entry_ = --arg_token_end;
     }
 }
 
 
-void carma::rules::object_creation::handleAnonObject(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::object_creation::handle_anon_object(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
 
 }
 
-void carma::rules::object_creation::handleDelKeyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::object_creation::handle_del_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
 
     auto object_token = std::next(start_entry_);
     if (object_token == tokens_.end())
@@ -99,7 +99,7 @@ void carma::rules::object_creation::handleDelKeyword(carma::compiler::context& a
                 block_counter--;
         }
 
-        auto obj_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, obj_token_start, obj_token_end).compile();
+        auto obj_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, obj_token_start, obj_token_end).compile();
 
         for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
@@ -109,7 +109,7 @@ void carma::rules::object_creation::handleDelKeyword(carma::compiler::context& a
         start_entry_->type = carma::type::EMPTY;
         --obj_token_end;
         obj_token_end->type = carma::type::UNKNOWN;
-        obj_token_end->val = "([" + obj_string + "] call carma2_fnc_delObject)";
+        obj_token_end->val = "([" + obj_string + "] call carma2_fnc_del_object)";
 
         start_entry_ = obj_token_end;
     }

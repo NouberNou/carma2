@@ -48,10 +48,10 @@ public:
     script_command::Type type;
 };
 
-static class script_commandParser
+static class script_command_parser
 {
 public:
-    static void addScriptCommand(std::string input);
+    static void add_script_command(std::string input);
 
     /**
     * Convert a string into a vector of parameters based on comma's and brackets
@@ -61,7 +61,7 @@ public:
     *
     * @param parameters Input string containing the parameters
     */
-    static std::vector<std::string> getParameters(const std::string& parameters);
+    static std::vector<std::string> get_parameters(const std::string& parameters);
 
     /**
     * Get the script command if it exists.
@@ -83,6 +83,6 @@ public:
     static std::vector<script_command> commands;
     
 private:
-    script_commandParser();
-    ~script_commandParser();
+    script_command_parser();
+    ~script_command_parser();
 };

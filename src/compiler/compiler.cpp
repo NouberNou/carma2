@@ -17,7 +17,7 @@ namespace carma {
             std::vector<context*> functions = std::vector<context*>();
         }
 
-        context::context(context* parentContext, type context_type_, token_list& tokens_) : parent(parentContext), context_type(context_type_), _tokens(tokens_),
+        context::context(context* parent_, type context_type_, token_list& tokens_) : parent(parent_), context_type(context_type_), _tokens(tokens_),
             _start_token(tokens_.begin()), _end_token(tokens_.end())
         {
             std::vector<context*> functions = std::vector<context*>();
@@ -29,7 +29,7 @@ namespace carma {
             std::vector<context*> functions = std::vector<context*>();
         }
 
-        context::context(context* parentContext, type context_type_, token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_) : parent(parentContext), context_type(context_type_), _tokens(tokens_),
+        context::context(context* parent_, type context_type_, token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_) : parent(parent_), context_type(context_type_), _tokens(tokens_),
             _start_token(start_entry_), _end_token(end_entry_)
         {
             std::vector<context*> functions = std::vector<context*>();
@@ -148,7 +148,7 @@ namespace carma {
                 if (arg_token->type != carma::type::LITERAL && arg_token->val != "("  && arg_token->val != ")" && arg_token->val != ",")
                     throw exception::syntax_error("non-literal var name in function arguments");
                //if (arg_token->val.substr(0, 1) != "_")
-                //    throw CarmaSyntaxErrorException("non-local var name in function arguments");
+                //    throw Carma_syntax_error_exception("non-local var name in function arguments");
                     // arg_token->val = "_"+arg_token->val;
 
                 auto test_token = std::next(arg_token);
@@ -182,14 +182,14 @@ namespace carma {
         void context::compile_object(token_entry& start_entry_, token_entry& end_entry_) { 
             if (start_entry_->val == "new") {
                 // copy of prototype
-                carma::rules::object_creation::newObject(*this, _tokens, start_entry_, end_entry_);
+                carma::rules::object_creation::new_object(*this, _tokens, start_entry_, end_entry_);
             }
             else if (start_entry_->val == "{") {
                 // create anomyous js style prototype object
                 // TODO implement
             }
             else if (start_entry_->val == "del") {
-                carma::rules::object_creation::handleDelKeyword(*this, _tokens, start_entry_, end_entry_);
+                carma::rules::object_creation::handle_del_keyword(*this, _tokens, start_entry_, end_entry_);
             }
         }
 

@@ -13,11 +13,11 @@ carma::rules::function_declaration::~function_declaration()
 {
 }
 
-void carma::rules::function_declaration::function_keyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::function_declaration::function_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
     auto curr_token = start_entry_;
     auto function_params_start = curr_token;
     auto function_params_end = function_params_start;
-    bool hasEncounteredStart = false;
+    bool has_encountered_start = false;
     int block_counter = 0;
 
     std::string assignment = "";
@@ -30,21 +30,21 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
         }
     }
     // Move past the condition
-    for (curr_token; curr_token != end_entry_ && (!hasEncounteredStart || block_counter > 0); ++curr_token) {
+    for (curr_token; curr_token != end_entry_ && (!has_encountered_start || block_counter > 0); ++curr_token) {
         if (curr_token->type == carma::type::EMPTY)
             continue;
 
         if (curr_token->val == "(") {
-            if (!hasEncounteredStart) {
+            if (!has_encountered_start) {
                 function_params_start = curr_token;
             }
-            hasEncounteredStart = true;
+            has_encountered_start = true;
             block_counter++;
         }
         if (curr_token->val == ")")
             block_counter--;
     }
-    if (!hasEncounteredStart) {
+    if (!has_encountered_start) {
         throw std::exception("Syntax error!");
     }
 
@@ -54,7 +54,7 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
     // Parse condition between function_params_start and function_params_end
     std::string parameters = "";
     if (std::next(function_params_start) != function_params_end)
-        parameters = carma::compiler::context(&aScope, compiler::context::type::FUNCTION_PARAMS, tokens_, function_params_start, function_params_end).compile();
+        parameters = carma::compiler::context(&a_scope, compiler::context::type::FUNCTION_PARAMS, tokens_, function_params_start, function_params_end).compile();
 
     if (curr_token->val != "{")
         throw std::exception("Syntax error!");
@@ -62,23 +62,23 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
     // collect content in the function block
     auto function_block_start = curr_token;
 
-    hasEncounteredStart = false;
+    has_encountered_start = false;
     block_counter = 0;
-    for (curr_token; curr_token != end_entry_ && (!hasEncounteredStart || block_counter > 0); ++curr_token) {
+    for (curr_token; curr_token != end_entry_ && (!has_encountered_start || block_counter > 0); ++curr_token) {
         if (curr_token->type == carma::type::EMPTY)
             continue;
 
         if (curr_token->val == "{") {
-            if (!hasEncounteredStart) {
+            if (!has_encountered_start) {
                 function_params_start = curr_token;
             }
-            hasEncounteredStart = true;
+            has_encountered_start = true;
             block_counter++;
         }
         if (curr_token->val == "}")
             block_counter--;
     }
-    if (!hasEncounteredStart || block_counter > 0)
+    if (!has_encountered_start || block_counter > 0)
         throw std::exception("Syntax error");
 
     curr_token--; // go one back to }
@@ -89,7 +89,7 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
     if (std::next(function_block_start) != curr_token) {
         function_block_start++;
         // curr_token--;
-        block = carma::compiler::context(&aScope, compiler::context::type::FUNCTION, tokens_, function_block_start, curr_token).compile();
+        block = carma::compiler::context(&a_scope, compiler::context::type::FUNCTION, tokens_, function_block_start, curr_token).compile();
     }
     // parse content between function_block_start and curr_token (block end)
     auto content = assignment + "{ scopeName \"____carma2_main_scope\";" + parameters + block + "nil;}";
@@ -103,12 +103,12 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
 
 }
 
-void carma::rules::function_declaration::return_keyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::function_declaration::return_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
     auto return_token = std::next(start_entry_);
     if (return_token == tokens_.end())
         return;
 
-    if (!aScope.in_scope(compiler::context::type::FUNCTION))
+    if (!a_scope.in_scope(compiler::context::type::FUNCTION))
         throw std::exception("Return statement must be in a function context");
 
     if (return_token->type == carma::type::LITERAL) {
@@ -130,7 +130,7 @@ void carma::rules::function_declaration::return_keyword(carma::compiler::context
         }
 
         // compile the content of the statement
-        auto return_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, return_token_start, return_token_end).compile();
+        auto return_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, return_token_start, return_token_end).compile();
         
         // clear tokens we already processed
         compiler::empty_tokens(tokens_, return_token_start, return_token_end);      
@@ -141,7 +141,7 @@ void carma::rules::function_declaration::return_keyword(carma::compiler::context
 
         // Set up our return string
         return_token_end->type = carma::type::UNKNOWN;
-        return_token_end->val = "((" + return_string + ") breakOut \"____carma2_main_scope\")";
+        return_token_end->val = "((" + return_string + ") break_out \"____carma2_main_scope\")";
         start_entry_ = return_token_end;
     }
 }

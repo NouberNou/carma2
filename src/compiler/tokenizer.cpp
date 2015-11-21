@@ -41,13 +41,13 @@ namespace carma {
 							if (!is_comment_line && !is_comment_block) {
 								token new_token;
 								new_token.val = token_str;
-                                if (isNumber(token_str)) {
+                                if (is_number(token_str)) {
                                     new_token.type = type::SCALAR;
                                 }
                                 else {
                                     new_token.type = type::LITERAL;
                                 }
-								new_token.streamPos = stream_pos - token_str.length();
+								new_token.stream_pos = stream_pos - token_str.length();
 								token_stream.push_back(new_token);
 							}
 						}
@@ -106,7 +106,7 @@ namespace carma {
 							if (!is_comment_line && !is_comment_block) {
 								token operator_token;
 								operator_token.val = cur_char;
-								operator_token.streamPos = stream_pos;
+								operator_token.stream_pos = stream_pos;
 								operator_token.type = type::OPERATOR;
 								if (cur_char == ";") {
 									operator_token.type = type::ENDOFSTATEMENT;
@@ -144,7 +144,7 @@ namespace carma {
 							if (!is_comment_line && !is_comment_block) {
 								token new_token;
 								new_token.val = token_str;
-								new_token.streamPos = stream_pos - token_str.length();
+								new_token.stream_pos = stream_pos - token_str.length();
 								new_token.type = type::OPERATOR;
 								token_stream.push_back(new_token);
 							}
@@ -205,7 +205,7 @@ namespace carma {
 					}
 				}
 			}
-            script_commandParser::addScriptCommand(input_);
+            script_command_parser::add_script_command(input_);
 		}
 
 		bool is_reserved_word(std::string input_) {
@@ -226,7 +226,7 @@ namespace carma {
 			tokens_ = clean_tokens;
 		}
 
-        bool isNumber(const std::string& input) {
+        bool is_number(const std::string& input) {
             if (input.length() > 0) {
                 return isdigit(input[0]);                
             }

@@ -74,21 +74,21 @@ namespace carma {
             
             /**
             * Create a new parent context
-            * @param aType the type of context
+            * @param context_type_ the type of context
             * @param tokens list of tokens that make up the context
             */
             context(type context_type_, token_list& tokens_);
 
             /**
             * Create a new sub context
-            * @param aType the type of context
+            * @param context_type_ the type of context
             * @param tokens list of tokens that make up the context
             */
             context(context* parent_context_, type context_type_, token_list& tokens_);
 
             /**
             * Create a new parent context
-            * @param aType the type of context
+            * @param context_type_ the type of context
             * @param tokens list of tokens that make up the context
             * @param start_entry_ Starting point in the tokens list
             * @param end_entry|_ End point in the tokens list
@@ -97,7 +97,7 @@ namespace carma {
 
             /**
             * Create a new sub context
-            * @param aType the type of context
+            * @param context_type_ the type of context
             * @param tokens list of tokens that make up the context
             * @param start_entry_ Starting point in the tokens list
             * @param end_entry|_ End point in the tokens list
@@ -112,9 +112,9 @@ namespace carma {
 
             /**
             * Check if current context or it's parents are of a given type. Will work it's way all the way through the parent tree
-            * @param aType The type that is being checked against the contexts
+            * @param context_type_ The type that is being checked against the contexts
             */
-            bool in_scope(type aType);
+            bool in_scope(type context_type_);
 
         private:
 

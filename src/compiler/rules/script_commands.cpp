@@ -1,18 +1,18 @@
 #include "script_commands.hpp"
 #include <regex>
 
-std::vector<script_command> script_commandParser::commands = std::vector<script_command>();
+std::vector<script_command> script_command_parser::commands = std::vector<script_command>();
 
-script_commandParser::script_commandParser()
+script_command_parser::script_command_parser()
 {    
 }
 
-script_commandParser::~script_commandParser()
+script_command_parser::~script_command_parser()
 {
 }
 
 
-std::vector<std::string> script_commandParser::getParameters(const std::string& source_) {
+std::vector<std::string> script_command_parser::get_parameters(const std::string& source_) {
     std::vector<std::string> parameters = std::vector<std::string>();
 
     std::string token_str;
@@ -41,7 +41,7 @@ std::vector<std::string> script_commandParser::getParameters(const std::string& 
     return parameters;
 }
 
-void script_commandParser::addScriptCommand(std::string input) {
+void script_command_parser::add_script_command(std::string input) {
     std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
     std::regex check_binary(".*b:.+?\\s(.+?)\\s.+");
@@ -69,10 +69,10 @@ void script_commandParser::addScriptCommand(std::string input) {
     }
 }
 
-script_command script_commandParser::getscript_command(std::string cmd, script_command::Type type) {
+script_command script_command_parser::getscript_command(std::string cmd, script_command::Type type) {
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
-    for each (auto command in script_commandParser::commands)
+    for each (auto command in script_command_parser::commands)
     {
         if (command.name == cmd && command.type == type)
             return command;
@@ -81,10 +81,10 @@ script_command script_commandParser::getscript_command(std::string cmd, script_c
     return *comm;
 };
 
-bool script_commandParser::isscript_command(std::string cmd, script_command::Type type) {
+bool script_command_parser::isscript_command(std::string cmd, script_command::Type type) {
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
-    for each (auto command in script_commandParser::commands)
+    for each (auto command in script_command_parser::commands)
     {
         if (command.name == cmd && command.type == type)
             return true;
