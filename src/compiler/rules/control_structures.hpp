@@ -17,7 +17,7 @@ namespace carma {
             * @param end_entry_ Max token to where can be parsed
             * @returns all code blocks (scopes) from control structure
             */
-            static CarmaScopes handleIfStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static carma::compiler::scopes if_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Handle the switch statement
@@ -26,7 +26,7 @@ namespace carma {
             * @param end_entry_ Max token to where can be parsed
             * @returns all code blocks (scopes) from control structure
             */
-            static CarmaScopes handleSwitchStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static carma::compiler::scopes switch_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Handle the while loop
@@ -35,7 +35,7 @@ namespace carma {
             * @param end_entry_ Max token to where can be parsed
             * @returns all code blocks (scopes) from control structure
             */
-            static CarmaScopes handleWhileStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static carma::compiler::scopes while_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Handle the waitUntil loop
@@ -44,7 +44,7 @@ namespace carma {
             * @param end_entry_ Max token to where can be parsed
             * @returns all code blocks (scopes) from control structure
             */
-            static CarmaScopes handleWaitUntilStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static carma::compiler::scopes waituntil_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
         };
     }
 }

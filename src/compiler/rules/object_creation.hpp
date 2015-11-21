@@ -14,7 +14,7 @@ namespace carma {
             * @param start_entry_ Starting point
             * @param end_entry_ Max token to where can be parsed
             */
-            static void newObject(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
+            static void newObject(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
 
             /**
             * Handle the anonymous object creation ( { } )
@@ -22,7 +22,7 @@ namespace carma {
             * @param start_entry_ Starting point
             * @param end_entry_ Max token to where can be parsed
             */
-            static void handleAnonObject(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
+            static void handleAnonObject(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
             
             /**
             * Handle the del keyword
@@ -30,7 +30,7 @@ namespace carma {
             * @param start_entry_ Starting point
             * @param end_entry_ Max token to where can be parsed
             */
-            static void handleDelKeyword(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
+            static void handleDelKeyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
              
             object_creation();
             ~object_creation();

@@ -10,7 +10,7 @@ carma::rules::operator_handler::~operator_handler()
 {
 }
 
-void carma::rules::operator_handler::handleDotOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::dot_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     auto object_token = start_entry_;
     auto dot_token = std::next(start_entry_);
     auto member_token = std::next(start_entry_, 2);
@@ -45,7 +45,7 @@ void carma::rules::operator_handler::handleDotOperator(CarmaScope& aScope, token
                 block_counter--;
         }
 
-        auto val_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, val_token_start, val_token_end).Compile();
+        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
         for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
         }
@@ -81,7 +81,7 @@ void carma::rules::operator_handler::handleDotOperator(CarmaScope& aScope, token
                 block_counter--;
         }
 
-        auto val_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, arg_token_start, arg_token_end).Compile();
+        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
         std::string arg_string = carma::compiler::build_string(tokens_, arg_token_start, arg_token_end);
         for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
@@ -124,7 +124,7 @@ void carma::rules::operator_handler::handleDotOperator(CarmaScope& aScope, token
     }
 }
 
-void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::method_call_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
 
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
@@ -158,7 +158,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
         auto arg_token_end = std::next(start_entry_, 2);
 
         if (arg_token_end == end_entry_)
-            throw CarmaSyntaxErrorException("hanging ( operator"); 
+            throw carma::compiler::exception::syntax_error("hanging ( operator"); 
 
         // Check if we use our command as a method
         if (paren_token->val == "(") { // we got a method invoke
@@ -172,7 +172,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
                     start_entry_->type = carma::type::EMPTY;
                 }
                 else {
-                    throw CarmaSyntaxErrorException("Script command (" + commandName + ") with no parameters does not exist");
+                    throw carma::compiler::exception::syntax_error("Script command (" + commandName + ") with no parameters does not exist");
                 }
             }
             else { // Method invoke with parameters
@@ -188,7 +188,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
                         block_counter--;
                 }
                 // Recursively process the parameters inside the ( .. )
-                auto val_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, arg_token_start, arg_token_end).Compile();
+                auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
 
                 // Convert our parameters into a vector
                 auto parameters = script_commandParser::getParameters(val_string);
@@ -208,7 +208,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
                         start_entry_ = --arg_token_end;
                     }
                     else {
-                        throw CarmaSyntaxErrorException("Script command (" + commandName + ") with one parameter does not exist");
+                        throw carma::compiler::exception::syntax_error("Script command (" + commandName + ") with one parameter does not exist");
                     }
                 }
                 else if (parameters.size() >= 2) { // If there is one parameter, try to use our command as a binary argument
@@ -222,7 +222,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
                     }
                     else {
                         // TODO syntax error
-                        throw CarmaSyntaxErrorException("Script command (" + commandName + ") with two parameters does not exist");
+                        throw carma::compiler::exception::syntax_error("Script command (" + commandName + ") with two parameters does not exist");
                     }
                 }
                 else { // Single parameter command - no parameters found. Just output the command name and we are done
@@ -239,7 +239,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
     auto paren_token = std::next(start_entry_);
     auto arg_token_end = std::next(start_entry_, 2);
     if (arg_token_end == end_entry_)
-        throw CarmaSyntaxErrorException("Hanging [ operator"); // @TODO: this should be a syntax error, hanging [ operator.
+        throw carma::compiler::exception::syntax_error("Hanging [ operator"); // @TODO: this should be a syntax error, hanging [ operator.
 
     auto arg_token_start = arg_token_end;
 
@@ -252,7 +252,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
             block_counter--;
     }
 
-    auto arg_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, arg_token_start, arg_token_end).Compile();
+    auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
     for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
         clear_token->type = carma::type::EMPTY;
     }
@@ -263,7 +263,7 @@ void carma::rules::operator_handler::handleMethodCallOperator(CarmaScope& aScope
     start_entry_ = --arg_token_end;
 }
 
-void carma::rules::operator_handler::handleArrayAccessOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::array_access_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
@@ -298,7 +298,7 @@ void carma::rules::operator_handler::handleArrayAccessOperator(CarmaScope& aScop
 
     auto arg_token_end = std::next(start_entry_, 2);
     if (arg_token_end == end_entry_)
-        throw CarmaSyntaxErrorException("Hanging [ operator"); // @TODO: this should be a syntax error, hanging [ operator.
+        throw carma::compiler::exception::syntax_error("Hanging [ operator"); // @TODO: this should be a syntax error, hanging [ operator.
 
     auto arg_token_start = arg_token_end;
 
@@ -311,7 +311,7 @@ void carma::rules::operator_handler::handleArrayAccessOperator(CarmaScope& aScop
             block_counter--;
     }
 
-    auto arg_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, arg_token_start, arg_token_end).Compile();
+    auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
 
     for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
         clear_token->type = carma::type::EMPTY;
@@ -333,7 +333,7 @@ void carma::rules::operator_handler::handleArrayAccessOperator(CarmaScope& aScop
     else {
         auto val_token_end = std::next(following_token);
         if (val_token_end == end_entry_)
-            throw CarmaSyntaxErrorException("Hanging = operator"); // @TODO: this should be a syntax error, hanging = operator.
+            throw carma::compiler::exception::syntax_error("Hanging = operator"); // @TODO: this should be a syntax error, hanging = operator.
 
         auto val_token_start = val_token_end;
         block_counter = 0;
@@ -346,7 +346,7 @@ void carma::rules::operator_handler::handleArrayAccessOperator(CarmaScope& aScop
                 block_counter--;
         }
 
-        auto val_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, val_token_start, val_token_end).Compile();
+        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
         for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
         }
@@ -359,7 +359,7 @@ void carma::rules::operator_handler::handleArrayAccessOperator(CarmaScope& aScop
     }
 }
 
-void carma::rules::operator_handler::handleMemberAccessOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+void carma::rules::operator_handler::member_access_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
@@ -373,7 +373,7 @@ void carma::rules::operator_handler::handleMemberAccessOperator(CarmaScope& aSco
 
     auto arg_token_end = std::next(start_entry_, 2);
     if (arg_token_end == end_entry_)
-        throw CarmaSyntaxErrorException("Hanging [ operator"); // @TODO: this should be a syntax error, hanging [ operator.
+        throw carma::compiler::exception::syntax_error("Hanging [ operator"); // @TODO: this should be a syntax error, hanging [ operator.
 
     auto arg_token_start = arg_token_end;
 
@@ -386,7 +386,7 @@ void carma::rules::operator_handler::handleMemberAccessOperator(CarmaScope& aSco
             block_counter--;
     }
 
-    auto arg_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, arg_token_start, arg_token_end).Compile();
+    auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
     for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
         clear_token->type = carma::type::EMPTY;
     }
@@ -420,7 +420,7 @@ void carma::rules::operator_handler::handleMemberAccessOperator(CarmaScope& aSco
                 block_counter--;
         }
 
-        auto val_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, val_token_start, val_token_end).Compile();
+        auto val_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, val_token_start, val_token_end).compile();
         for (auto clear_token = val_token_start; clear_token != val_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;
         }

@@ -12,7 +12,7 @@ carma::rules::object_creation::~object_creation()
 {
 }
 
-void carma::rules::object_creation::newObject(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::object_creation::newObject(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
     
     auto object_token = std::next(start_entry_);
     if (object_token == tokens_.end())
@@ -35,7 +35,7 @@ void carma::rules::object_creation::newObject(CarmaScope& aScope, tokenizer::tok
 			    block_counter--;
 	    }
 
-        auto obj_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, obj_token_start, obj_token_end).Compile();
+        auto obj_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, obj_token_start, obj_token_end).compile();
         
 	    for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
 		    clear_token->type = carma::type::EMPTY;
@@ -56,7 +56,7 @@ void carma::rules::object_creation::newObject(CarmaScope& aScope, tokenizer::tok
 			    block_counter--;
 	    }
 
-        auto arg_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, arg_token_start, arg_token_end).Compile();
+        auto arg_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, arg_token_start, arg_token_end).compile();
 
 	    for (auto clear_token = arg_token_start; clear_token != arg_token_end; ++clear_token) {
 		    clear_token->type = carma::type::EMPTY;
@@ -72,11 +72,11 @@ void carma::rules::object_creation::newObject(CarmaScope& aScope, tokenizer::tok
 }
 
 
-void carma::rules::object_creation::handleAnonObject(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::object_creation::handleAnonObject(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
 
 }
 
-void carma::rules::object_creation::handleDelKeyword(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::object_creation::handleDelKeyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
 
     auto object_token = std::next(start_entry_);
     if (object_token == tokens_.end())
@@ -99,7 +99,7 @@ void carma::rules::object_creation::handleDelKeyword(CarmaScope& aScope, tokeniz
                 block_counter--;
         }
 
-        auto obj_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, obj_token_start, obj_token_end).Compile();
+        auto obj_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, obj_token_start, obj_token_end).compile();
 
         for (auto clear_token = obj_token_start; clear_token != obj_token_end; ++clear_token) {
             clear_token->type = carma::type::EMPTY;

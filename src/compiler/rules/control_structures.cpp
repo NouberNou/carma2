@@ -13,9 +13,9 @@ rules::control_structures::~control_structures()
 }
 
 
-CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
+carma::compiler::scopes rules::control_structures::if_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
 {
-    CarmaScopes scopes = CarmaScopes();
+    carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
     
     auto current_token = start_entry_;
@@ -29,7 +29,7 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
     // if () < should throw syntax error, empty condition
     // if (true) < valid
     if (std::next(current_token)->val != "(") {
-        throw CarmaSyntaxErrorException("Syntax error");
+        throw carma::compiler::exception::syntax_error("Syntax error");
     }
     // Move past the condition
     for (current_token; current_token != end_entry_ && (!hasEncounteredCondition || block_counter > 0); ++current_token) {
@@ -47,10 +47,10 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
             block_counter--;
     }
     // Compile between start_entry_ and current_token for the condition call
-    auto statementScope = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, statementStart, current_token).Compile();
+    auto statementScope = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, statementStart, current_token).compile();
 
     if (statementScope == "")  // condition must at least have one character
-        throw CarmaSyntaxErrorException("Empty condition!");
+        throw carma::compiler::exception::syntax_error("Empty condition!");
 
     stream << "if " << statementScope << " then {";
     
@@ -77,7 +77,7 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
             hasEncounteredCondition = false;
 
             if (current_token->val != "(") {
-                throw CarmaSyntaxErrorException("Syntax error");
+                throw carma::compiler::exception::syntax_error("Syntax error");
             }
             // Move past the condition
             for (current_token; current_token != end_entry_ && (!hasEncounteredCondition || block_counter > 0); ++current_token) {
@@ -95,8 +95,8 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
                     block_counter--;
             }
             // Compile between current_token and current_token for the condition call
-            CarmaScope statementScope = CarmaScope(&aScope, compiler::context::Type::SCOPE, tokens_, statementStart, current_token);
-            stream << "if " << statementScope.Compile() << " then {";
+            carma::compiler::context statementScope = carma::compiler::context(&aScope, compiler::context::type::SCOPE, tokens_, statementStart, current_token);
+            stream << "if " << statementScope.compile() << " then {";
 
             current_token++; // advance past the )
             
@@ -125,15 +125,15 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
         current_token--;
 
         if (block_counter > 0)
-            throw CarmaSyntaxErrorException("syntax error!"); //syntax error
+            throw carma::compiler::exception::syntax_error("syntax error!"); //syntax error
         
         if (current_token != block_start_token) {
             block_start_token++;
 
             // code block is: block_start_token till current_token
             // process contents within code block regulary
-            CarmaScope contentScope = CarmaScope(&aScope, compiler::context::Type::SCOPE, tokens_, block_start_token, current_token);
-            auto block_content = contentScope.Compile();
+            carma::compiler::context contentScope = carma::compiler::context(&aScope, compiler::context::type::SCOPE, tokens_, block_start_token, current_token);
+            auto block_content = contentScope.compile();
             stream << "" << block_content << "}";
             scopes.push_back(contentScope);
         }
@@ -169,9 +169,9 @@ CarmaScopes rules::control_structures::handleIfStatement(CarmaScope& aScope, tok
     return scopes;
 }
 
-CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
+carma::compiler::scopes rules::control_structures::switch_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
 {
-    CarmaScopes scopes = CarmaScopes();
+    carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
     auto current_token = start_entry_;
     auto statementStart = current_token;
@@ -179,14 +179,14 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
     bool hasEncounteredCondition = false;
 
     if (current_token->val != "switch")
-        throw CarmaSyntaxErrorException("Not a switch statement");
+        throw carma::compiler::exception::syntax_error("Not a switch statement");
 
     // Validate that there is no wierd shit in between the switch and the ().
     // example: if blaa () < should throw syntax error
     // if () < should throw syntax error, empty condition
     // if (true) < valid
     if (std::next(current_token)->val != "(") {
-        throw CarmaSyntaxErrorException("Syntax error");
+        throw carma::compiler::exception::syntax_error("Syntax error");
     }
     // Move past the condition
     for (current_token; current_token != end_entry_ && (!hasEncounteredCondition || block_counter > 0); ++current_token) {
@@ -204,13 +204,13 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
             block_counter--;
     }
     // Compile between start_entry_ and current_token for the condition call
-    auto statementScope = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, statementStart, current_token).Compile();
+    auto statementScope = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, statementStart, current_token).compile();
     if (statementScope == "")  // condition must at least have one character
-        throw CarmaSyntaxErrorException("Empty condition!");
+        throw carma::compiler::exception::syntax_error("Empty condition!");
     stream << "switch " << statementScope << " do {" << std::endl;
 
     if (current_token == end_entry_)
-        throw CarmaSyntaxErrorException("On the end already");
+        throw carma::compiler::exception::syntax_error("On the end already");
 
     // Handle the case statements
     while (std::next(current_token)->val == "case" || std::next(current_token)->val == "default") {
@@ -235,10 +235,10 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
                 if (current_token->val == ")")
                     block_counter--;
             }
-            case_statement = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, statementStart, current_token).Compile();
+            case_statement = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, statementStart, current_token).compile();
 
             if (case_statement == "")
-                throw CarmaSyntaxErrorException("Empty condition statement in case label");
+                throw carma::compiler::exception::syntax_error("Empty condition statement in case label");
         }
         else {
             current_token++;
@@ -269,7 +269,7 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
             }
         }
         if (block_counter > 0) 
-            throw CarmaSyntaxErrorException("Missing break keyword behind case label");
+            throw carma::compiler::exception::syntax_error("Missing break keyword behind case label");
 
         current_token--;
 
@@ -277,7 +277,7 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
             // syntax error        
         }
 
-        auto case_scope_compiled = CarmaScope(&aScope, compiler::context::Type::SCOPE, tokens_, start_case, current_token).Compile();
+        auto case_scope_compiled = carma::compiler::context(&aScope, compiler::context::type::SCOPE, tokens_, start_case, current_token).compile();
         if (case_statement != "") {
             stream << "case " << case_statement << ": {" << case_scope_compiled << "};";
         }
@@ -290,7 +290,7 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
             current_token++; // skip the ; behind the break
 
         if (current_token == end_entry_)
-            throw CarmaSyntaxErrorException("On the end already");
+            throw carma::compiler::exception::syntax_error("On the end already");
         
         //if (current_token == end_entry_ || std::next(current_token) == end_entry_);
        //     throw std::exception("On the end already");
@@ -302,7 +302,7 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
         current_token++; // skip the ; behind the break
 
     if (current_token->val != "}") {
-        throw CarmaMissingBracketException("Missing closing bracket on switch statement");  
+        throw carma::compiler::exception::missing_bracket("Missing closing bracket on switch statement");
     }
 
     if (std::next(current_token) != end_entry_) {
@@ -321,9 +321,9 @@ CarmaScopes rules::control_structures::handleSwitchStatement(CarmaScope& aScope,
     return scopes;
 }
 
-CarmaScopes rules::control_structures::handleWhileStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
+carma::compiler::scopes rules::control_structures::while_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
 {
-    CarmaScopes scopes = CarmaScopes();
+    carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
 
     auto current_token = start_entry_;
@@ -336,7 +336,7 @@ CarmaScopes rules::control_structures::handleWhileStatement(CarmaScope& aScope, 
     // if () < should throw syntax error, empty condition
     // if (true) < valid
     if (std::next(current_token)->val != "(") {
-        throw CarmaSyntaxErrorException("Syntax error");
+        throw carma::compiler::exception::syntax_error("Syntax error");
     }
     // Move past the condition
     for (current_token; current_token != end_entry_ && (!hasEncounteredCondition || block_counter > 0); ++current_token) {
@@ -354,13 +354,13 @@ CarmaScopes rules::control_structures::handleWhileStatement(CarmaScope& aScope, 
             block_counter--;
     }
     // Compile between start_entry_ and current_token for the condition call
-    auto statementScope = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, statementStart, current_token).Compile();
+    auto statementScope = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, statementStart, current_token).compile();
     if (statementScope == "")  // condition must at least have one character
-        throw CarmaSyntaxErrorException("Empty condition!");
+        throw carma::compiler::exception::syntax_error("Empty condition!");
 
     stream << "while {(" << statementScope << ")} do {" << std::endl;
     if (current_token->val != "{")
-        throw CarmaMissingBracketException("Missing {");
+        throw carma::compiler::exception::missing_bracket("Missing {");
     
     bool hasEncounteredCodeBlock = false;
     auto block_start_token = current_token;
@@ -381,13 +381,13 @@ CarmaScopes rules::control_structures::handleWhileStatement(CarmaScope& aScope, 
             block_counter--;
     }
     if (current_token == end_entry_ && block_counter > 0)
-        throw CarmaSyntaxErrorException("syntax error!"); //syntax error
+        throw carma::compiler::exception::syntax_error("syntax error!"); //syntax error
     block_start_token++;
 
     // code block is: block_start_token till current_token
     // process contents within code block regulary
-    CarmaScope contentScope = CarmaScope(&aScope, compiler::context::Type::SCOPE, tokens_, block_start_token, current_token);
-    stream << "" << contentScope.Compile() << ";" << std::endl;
+    carma::compiler::context contentScope = carma::compiler::context(&aScope, compiler::context::type::SCOPE, tokens_, block_start_token, current_token);
+    stream << "" << contentScope.compile() << ";" << std::endl;
 
     scopes.push_back(contentScope);
     
@@ -402,9 +402,9 @@ CarmaScopes rules::control_structures::handleWhileStatement(CarmaScope& aScope, 
     return scopes;
 }
 
-CarmaScopes rules::control_structures::handleWaitUntilStatement(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
+carma::compiler::scopes rules::control_structures::waituntil_statement(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
 {
-    CarmaScopes scopes = CarmaScopes();
+    carma::compiler::scopes scopes = carma::compiler::scopes();
 
     return scopes;
 }

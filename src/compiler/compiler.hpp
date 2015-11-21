@@ -13,7 +13,7 @@ namespace carma {
 
         /**
         * Convert tokens into a string
-        * @param tokens The tokens
+        * @param tokens_ The tokens
         * @param start_entry_ Starting point from which the string will be compiled
         * @param end_entry_ End point till which everything will be converted into a string
         * @return A string from start_entry_ until the token before end_entry_
@@ -22,7 +22,7 @@ namespace carma {
 
         /**
         * Convert tokens into a string
-        * @param tokens The tokens
+        * @param tokens_ The tokens
         * @param start_entry_ Starting point from which the string will be compiled
         * @param end_entry_ End point till which everything will be converted into a string
         * @return A string from start_entry_ until the token before end_entry_
@@ -31,7 +31,7 @@ namespace carma {
 
         /**
         * Convert tokens into a mimimalized version, without empty tokens in between
-        * @param tokens The tokens
+        * @param tokens_ The tokens
         * @param start_entry_ Starting point
         * @param end_entry_ End point
         * @return A mimized version of the token list
@@ -40,7 +40,7 @@ namespace carma {
 
         /**
         * Convert tokens to empty tokens
-        * @param tokens The tokens
+        * @param tokens_ The tokens
         * @param start_entry_ Starting point
         * @param end_entry_ End point
         */
@@ -51,7 +51,7 @@ namespace carma {
             /**
             * Possible context types
             */
-            enum class Type { FILE, SCOPE, OBJECT, FUNCTION, FUNCTION_PARAMS, CONTROL_STRUCTURE, STATEMENT };
+            enum class type { FILE, SCOPE, OBJECT, FUNCTION, FUNCTION_PARAMS, CONTROL_STRUCTURE, STATEMENT };
 
             /**
             * Parent context. Null_ptr if this is a root.
@@ -67,7 +67,7 @@ namespace carma {
             /**
             * The context type
             */
-            Type type;
+            type context_type;
 
             std::vector<std::string> variables;
             std::vector<context*> functions;
@@ -77,14 +77,14 @@ namespace carma {
             * @param aType the type of context
             * @param tokens list of tokens that make up the context
             */
-            context(Type aType, token_list& tokens);
+            context(type context_type_, token_list& tokens_);
 
             /**
             * Create a new sub context
             * @param aType the type of context
             * @param tokens list of tokens that make up the context
             */
-            context(context* parentContext, Type aType, token_list& tokens);
+            context(context* parent_context_, type context_type_, token_list& tokens_);
 
             /**
             * Create a new parent context
@@ -93,7 +93,7 @@ namespace carma {
             * @param start_entry_ Starting point in the tokens list
             * @param end_entry|_ End point in the tokens list
             */
-            context(Type aType, token_list& tokens, token_entry& start_entry_, token_entry& end_entry_);
+            context(type parent_context_, token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Create a new sub context
@@ -102,19 +102,19 @@ namespace carma {
             * @param start_entry_ Starting point in the tokens list
             * @param end_entry|_ End point in the tokens list
             */
-            context(context* parentContext, Type aType, token_list& tokens, token_entry& start_entry_, token_entry& end_entry_);
+            context(context* parent_context_, type context_type_, token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Compile the context
             * @returns Compiled contents as a string
             */
-            std::string Compile();
+            std::string compile();
 
             /**
             * Check if current context or it's parents are of a given type. Will work it's way all the way through the parent tree
             * @param aType The type that is being checked against the contexts
             */
-            bool InScopeType(Type aType);
+            bool in_scope(type aType);
 
         private:
 
@@ -146,76 +146,34 @@ namespace carma {
             void compile_control_structure(token_entry& start_entry_, token_entry& end_entry_);
             
 
-            token_list& tokens;
-            token_entry& start_token;
-            token_entry& end_token;
+            token_list& _tokens;
+            token_entry& _start_token;
+            token_entry& _end_token;
         };
 
         namespace exception {
-            class syntax_error : std::exception {
-                public:
-                    syntax_error(const std::string& msg) : msg_(msg) {}
-                    ~syntax_error() {}
+			class exception_base {
+			public:
+				explicit exception_base(const std::string& message_) : _message(message_) {}
+				~exception_base() {}
 
-                    std::string getMessage() const { return(msg_); }
-                private:
-                    std::string msg_;
-            };
-            class invalid_context : std::exception {
-            public:
-                invalid_context(const std::string& msg) : msg_(msg) {}
-                ~invalid_context() {}
+				std::string message() const { return(_message); }
+			private:
+				std::string _message;
+			};
 
-                std::string getMessage() const { return(msg_); }
-            private:
-                std::string msg_;
-            };
-            class missing_bracket : std::exception {
-            public:
-                missing_bracket(const std::string& msg) : msg_(msg) {}
-                ~missing_bracket() {}
-
-                std::string getMessage() const { return(msg_); }
-            private:
-                std::string msg_;
-            };
-            class mission_quotation : std::exception {
-            public:
-                mission_quotation(const std::string& msg) : msg_(msg) {}
-                ~mission_quotation() {}
-
-                std::string getMessage() const { return(msg_); }
-            private:
-                std::string msg_;
-            };
-            class invalid_operator : std::exception {
-            public:
-                invalid_operator(const std::string& msg) : msg_(msg) {}
-                ~invalid_operator() {}
-
-                std::string getMessage() const { return(msg_); }
-            private:
-                std::string msg_;
-            };
-            class unknown : std::exception {
-            public:
-                unknown(const std::string& msg) : msg_(msg) {}
-                ~unknown() {}
-
-                std::string getMessage() const { return(msg_); }
-            private:
-                std::string msg_;
-            };
+		    class syntax_error : public exception_base { exception_base::exception_base;  };
+            class invalid_context : public exception_base { exception_base::exception_base; };
+            class missing_bracket : public exception_base { exception_base::exception_base; };
+            class missing_quotation : public exception_base { exception_base::exception_base; };
+            class invalid_operator : public exception_base { exception_base::exception_base; };
+            class unknown : public exception_base { exception_base::exception_base; };
         };
+
+        typedef std::vector<carma::compiler::context> scopes;
 	};
+
+    
 };
 
-typedef carma::compiler::context CarmaScope;
-typedef std::vector<carma::compiler::context> CarmaScopes;
 
-typedef carma::compiler::exception::invalid_context CarmaInvalidContextException;
-typedef carma::compiler::exception::invalid_operator CarmaInvalidOperatorException;
-typedef carma::compiler::exception::missing_bracket CarmaMissingBracketException;
-typedef carma::compiler::exception::mission_quotation CarmaMissionQuotationException;
-typedef carma::compiler::exception::syntax_error CarmaSyntaxErrorException;
-typedef carma::compiler::exception::unknown CarmaUnkownException;

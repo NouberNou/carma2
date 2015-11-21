@@ -105,7 +105,7 @@ std::string script_command::format() {
     if (type == script_command::Type::NONE) {
         return name;
     }
-    throw CarmaSyntaxErrorException("Formatting script command (" + name + ") does not exists with no parameters");
+    throw carma::compiler::exception::syntax_error("Formatting script command (" + name + ") does not exists with no parameters");
 }
 
 std::string script_command::format(const std::string& first) {
@@ -114,7 +114,7 @@ std::string script_command::format(const std::string& first) {
     } else if (type == script_command::Type::RIGHT) {
         return "(" + name + " " + first + ")";
     }
-    throw CarmaSyntaxErrorException("Formatting script command (" + name + ") does not exists with one parameter");
+    throw carma::compiler::exception::syntax_error("Formatting script command (" + name + ") does not exists with one parameter");
 };
 
 std::string script_command::format(const std::string& first, const std::string& second) {
@@ -127,5 +127,5 @@ std::string script_command::format(const std::string& first, const std::string& 
     else if (type == script_command::Type::LEFT_RIGHT) {
         return "(" + first + " " + name + " " + second + ")";
     }
-    throw CarmaSyntaxErrorException("Formatting script command (" + name + ") does not exists with parameters");
+    throw carma::compiler::exception::syntax_error("Formatting script command (" + name + ") does not exists with parameters");
 };

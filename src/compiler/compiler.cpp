@@ -11,44 +11,44 @@
 namespace carma {
 	namespace compiler {
 
-        context::context(Type aType, token_list& tokens) : parent(nullptr), type(aType), tokens(tokens),
-            start_token(tokens.begin()), end_token(tokens.end())
+        context::context(type context_type_, token_list& tokens) : parent(nullptr), context_type(context_type_), _tokens(tokens),
+            _start_token(tokens.begin()), _end_token(tokens.end())
         {
             std::vector<context*> functions = std::vector<context*>();
         }
 
-        context::context(context* parentContext, Type aType, token_list& tokens) : parent(parentContext), type(aType), tokens(tokens),
-            start_token(tokens.begin()), end_token(tokens.end())
+        context::context(context* parentContext, type context_type_, token_list& tokens_) : parent(parentContext), context_type(context_type_), _tokens(tokens_),
+            _start_token(tokens_.begin()), _end_token(tokens_.end())
         {
             std::vector<context*> functions = std::vector<context*>();
         }
 
-        context::context(Type aType, token_list& tokens, token_entry& start_entry_, token_entry& end_entry_) : parent(nullptr), type(aType), tokens(tokens),
-            start_token(start_entry_), end_token(end_entry_)
+        context::context(type context_type_, token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_) : parent(nullptr), context_type(context_type_), _tokens(tokens_),
+            _start_token(start_entry_), _end_token(end_entry_)
         {
             std::vector<context*> functions = std::vector<context*>();
         }
 
-        context::context(context* parentContext, Type aType, token_list& tokens, token_entry& start_entry_, token_entry& end_entry_) : parent(parentContext), type(aType), tokens(tokens),
-            start_token(start_entry_), end_token(end_entry_)
+        context::context(context* parentContext, type context_type_, token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_) : parent(parentContext), context_type(context_type_), _tokens(tokens_),
+            _start_token(start_entry_), _end_token(end_entry_)
         {
             std::vector<context*> functions = std::vector<context*>();
         }
 
-        std::string context::Compile() 
+        std::string context::compile() 
         {
             try {
-                token_entry start_entry_ = start_token;
-                token_entry end_entry_ = end_token;
+                token_entry start_entry_ = _start_token;
+                token_entry end_entry_ = _end_token;
 
-                switch (type) {
-                case Type::FUNCTION_PARAMS:
+                switch (context_type) {
+                case type::FUNCTION_PARAMS:
                     compile_params(start_entry_, end_entry_);
                     break;
-                case Type::CONTROL_STRUCTURE:
+                case type::CONTROL_STRUCTURE:
                     compile_control_structure(start_entry_, end_entry_);;
                     break;
-                case Type::OBJECT:
+                case type::OBJECT:
                     compile_object(start_entry_, end_entry_);
                     break;
                 default:
@@ -56,35 +56,35 @@ namespace carma {
                     break;
                 }
 
-                auto str = compiler::build_string(tokens, start_token, end_token);
+                auto str = compiler::build_string(_tokens, _start_token, _end_token);
                 return str;
             }
             catch (std::exception& e) {
                 std::cout << e.what() << std::endl;
                 return "throw format['" + std::string(e.what()) +"'];";
-            } catch (CarmaInvalidContextException& e) {
-                std::cout << e.getMessage() << std::endl;
-                return "throw format['" + e.getMessage() + "'];";
+            } catch (exception::invalid_context& e) {
+                std::cout << e.message() << std::endl;
+                return "throw format['" + e.message() + "'];";
             }
-            catch (CarmaInvalidOperatorException& e) {
-                std::cout << e.getMessage() << std::endl;
-                return "throw format['" + e.getMessage() + "'];";
+            catch (exception::invalid_operator& e) {
+                std::cout << e.message() << std::endl;
+                return "throw format['" + e.message() + "'];";
             }
-            catch (CarmaMissingBracketException& e) {
-                std::cout << e.getMessage() << std::endl;
-                return "throw format['" + e.getMessage() + "'];";
+            catch (exception::missing_bracket& e) {
+                std::cout << e.message() << std::endl;
+                return "throw format['" + e.message() + "'];";
             }
-            catch (CarmaMissionQuotationException& e) {
-                std::cout << e.getMessage() << std::endl;
-                return "throw format['" + e.getMessage() + "'];";
+            catch (exception::missing_quotation& e) {
+                std::cout << e.message() << std::endl;
+                return "throw format['" + e.message() + "'];";
             }
-            catch (CarmaSyntaxErrorException& e) {
-                std::cout << e.getMessage() << std::endl;
-                return "throw format['" + e.getMessage() + "'];";
+            catch (exception::syntax_error& e) {
+                std::cout << e.message() << std::endl;
+                return "throw format['" + e.message() + "'];";
             }
-            catch (CarmaUnkownException& e) {
-                std::cout << e.getMessage() << std::endl;
-                return "throw format['" + e.getMessage() + "'];";
+            catch (exception::unknown& e) {
+                std::cout << e.message() << std::endl;
+                return "throw format['" + e.message() + "'];";
             }
         }
 
@@ -102,7 +102,7 @@ namespace carma {
                     continue;
                 }
                 if (current_token->val == "return") {
-                    carma::rules::function_declaration::returnKeyWord(*this, tokens, current_token, end_entry_);
+                    carma::rules::function_declaration::return_keyword(*this, _tokens, current_token, end_entry_);
                     continue;
                 }
                 if (current_token->val == "if" || current_token->val == "switch" || current_token->val == "while" || current_token->val == "waituntil") {
@@ -119,16 +119,16 @@ namespace carma {
                     )) {
                     // std::cout << "Process operator: " << current_token->val << " operator: " << std::next(current_token)->val << std::endl;
                     if (std::next(current_token)->val == "." || std::next(current_token)->val == "::") {
-                        rules::operator_handler::handleDotOperator(*this, tokens, current_token, end_entry_);
+                        rules::operator_handler::dot_operator(*this, _tokens, current_token, end_entry_);
                     }
                     else if (std::next(current_token)->val == "[") {
-                        rules::operator_handler::handleArrayAccessOperator(*this, tokens, current_token, end_entry_);
+                        rules::operator_handler::array_access_operator(*this, _tokens, current_token, end_entry_);
                     }
                     else if (std::next(current_token)->val == "{") {
-                        rules::operator_handler::handleMemberAccessOperator(*this, tokens, current_token, end_entry_);
+                        rules::operator_handler::member_access_operator(*this, _tokens, current_token, end_entry_);
                     }
                     else if (std::next(current_token)->val == "(") {
-                        rules::operator_handler::handleMethodCallOperator(*this, tokens, current_token, end_entry_);
+                        rules::operator_handler::method_call_operator(*this, _tokens, current_token, end_entry_);
                     }
                 }
             }
@@ -146,13 +146,13 @@ namespace carma {
                 if (arg_token->type == carma::type::EMPTY)
                     continue;
                 if (arg_token->type != carma::type::LITERAL && arg_token->val != "("  && arg_token->val != ")" && arg_token->val != ",")
-                    throw CarmaSyntaxErrorException("non-literal var name in function arguments");
+                    throw exception::syntax_error("non-literal var name in function arguments");
                //if (arg_token->val.substr(0, 1) != "_")
                 //    throw CarmaSyntaxErrorException("non-local var name in function arguments");
                     // arg_token->val = "_"+arg_token->val;
 
                 auto test_token = std::next(arg_token);
-                if (test_token == tokens.end())
+                if (test_token == _tokens.end())
                     continue;
 
                 if (test_token->val == "," || test_token->val == ")") {
@@ -160,7 +160,7 @@ namespace carma {
                 }
             }
 
-            compiler::empty_tokens(tokens, start_entry_, end_entry_);
+            compiler::empty_tokens(_tokens, start_entry_, end_entry_);
 
             if (args.size() > 0) {
                 std::stringstream params_string;
@@ -182,24 +182,24 @@ namespace carma {
         void context::compile_object(token_entry& start_entry_, token_entry& end_entry_) { 
             if (start_entry_->val == "new") {
                 // copy of prototype
-                carma::rules::object_creation::newObject(*this, tokens, start_entry_, end_entry_);
+                carma::rules::object_creation::newObject(*this, _tokens, start_entry_, end_entry_);
             }
             else if (start_entry_->val == "{") {
                 // create anomyous js style prototype object
                 // TODO implement
             }
             else if (start_entry_->val == "del") {
-                carma::rules::object_creation::handleDelKeyword(*this, tokens, start_entry_, end_entry_);
+                carma::rules::object_creation::handleDelKeyword(*this, _tokens, start_entry_, end_entry_);
             }
         }
 
         void context::compile_function(token_entry& start_entry_, token_entry& end_entry_) {
             if (start_entry_->val == "function") {
                 if (std::next(start_entry_)->val == "(") {
-                    carma::rules::function_declaration::functionKeyWord(*this, tokens, start_entry_, end_entry_);
+                    carma::rules::function_declaration::function_keyword(*this, _tokens, start_entry_, end_entry_);
                 }
                 else {
-                    carma::rules::function_declaration::functionKeyWord(*this, tokens, start_entry_, end_entry_);
+                    carma::rules::function_declaration::function_keyword(*this, _tokens, start_entry_, end_entry_);
                 }
             }  
         }
@@ -207,29 +207,29 @@ namespace carma {
         void context::compile_control_structure(token_entry& start_entry_, token_entry& end_entry_) {
 
             if (start_entry_->val == "if") {
-                rules::control_structures::handleIfStatement(*this, tokens, start_entry_, end_entry_);
+                rules::control_structures::if_statement(*this, _tokens, start_entry_, end_entry_);
             }
             else if (start_entry_->val == "switch") {
-                rules::control_structures::handleSwitchStatement(*this, tokens, start_entry_, end_entry_);
+                rules::control_structures::switch_statement(*this, _tokens, start_entry_, end_entry_);
 
             }
             else if (start_entry_->val == "while") {
-                rules::control_structures::handleWhileStatement(*this, tokens, start_entry_, end_entry_);
+                rules::control_structures::while_statement(*this, _tokens, start_entry_, end_entry_);
             }
             else if (start_entry_->val == "waituntil") {
-                rules::control_structures::handleWaitUntilStatement(*this, tokens, start_entry_, end_entry_);
+                rules::control_structures::waituntil_statement(*this, _tokens, start_entry_, end_entry_);
             }
             else {
-                throw CarmaSyntaxErrorException("Not a control structure"); // TODO proper exception here
+                throw exception::syntax_error("Not a control structure"); // TODO proper exception here
             }
         }
         
-        bool context::InScopeType(Type aType) {
-            if (type == aType)
+        bool context::in_scope(type context_type_) {
+            if (context_type == context_type_)
                 return true;
             if (parent == nullptr)
                 return false;
-            return parent->InScopeType(aType);
+            return parent->in_scope(context_type_);
         }
 
         void empty_tokens(token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_) {

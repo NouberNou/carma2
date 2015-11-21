@@ -15,7 +15,7 @@ namespace carma {
             * @param start_entry_ Location of the operator in the token list
             * @param end_entry_ Max point to where can be parsed
             */
-            static void handleDotOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static void dot_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Handle the () operator
@@ -23,7 +23,7 @@ namespace carma {
             * @param start_entry_ Location of the operator in the token list
             * @param end_entry_ Max point to where can be parsed
             */
-            static void handleMethodCallOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static void method_call_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Handle the [] operator
@@ -31,7 +31,7 @@ namespace carma {
             * @param start_entry_ Location of the operator in the token list
             * @param end_entry_ Max point to where can be parsed
             */
-            static void handleArrayAccessOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static void array_access_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
             /**
             * Handle the {} operator
@@ -39,7 +39,7 @@ namespace carma {
             * @param start_entry_ Location of the operator in the token list
             * @param end_entry_ Max point to where can be parsed
             */
-            static void handleMemberAccessOperator(CarmaScope& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            static void member_access_operator(carma::compiler::context& aScope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
         };
     }
 }

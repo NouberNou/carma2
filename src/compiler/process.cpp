@@ -7,7 +7,7 @@ namespace carma {
 
 			//process_new_keyword(tokens, tokens.begin(), tokens.end());
 			//clean_token_list(tokens);
-            return CarmaScope(compiler::context::Type::FILE, tokens, tokens.begin(), tokens.end()).Compile();
+            return context(compiler::context::type::FILE, tokens, tokens.begin(), tokens.end()).compile();
             
 			/*if(do_pretty_)
 				return build_string_pretty(tokens, tokens.begin(), tokens.end());

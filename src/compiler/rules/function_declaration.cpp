@@ -13,7 +13,7 @@ carma::rules::function_declaration::~function_declaration()
 {
 }
 
-void carma::rules::function_declaration::functionKeyWord(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::function_declaration::function_keyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
     auto curr_token = start_entry_;
     auto function_params_start = curr_token;
     auto function_params_end = function_params_start;
@@ -26,7 +26,7 @@ void carma::rules::function_declaration::functionKeyWord(CarmaScope& aScope, tok
             curr_token++;
             assignment = curr_token->val + "= ";
             if (curr_token->type == carma::type::SCALAR)
-                throw CarmaSyntaxErrorException("Function name may not start with a number (" + curr_token->val + ")");
+                throw carma::compiler::exception::syntax_error("Function name may not start with a number (" + curr_token->val + ")");
         }
     }
     // Move past the condition
@@ -54,7 +54,7 @@ void carma::rules::function_declaration::functionKeyWord(CarmaScope& aScope, tok
     // Parse condition between function_params_start and function_params_end
     std::string parameters = "";
     if (std::next(function_params_start) != function_params_end)
-        parameters = CarmaScope(&aScope, compiler::context::Type::FUNCTION_PARAMS, tokens_, function_params_start, function_params_end).Compile();
+        parameters = carma::compiler::context(&aScope, compiler::context::type::FUNCTION_PARAMS, tokens_, function_params_start, function_params_end).compile();
 
     if (curr_token->val != "{")
         throw std::exception("Syntax error!");
@@ -89,7 +89,7 @@ void carma::rules::function_declaration::functionKeyWord(CarmaScope& aScope, tok
     if (std::next(function_block_start) != curr_token) {
         function_block_start++;
         // curr_token--;
-        block = CarmaScope(&aScope, compiler::context::Type::FUNCTION, tokens_, function_block_start, curr_token).Compile();
+        block = carma::compiler::context(&aScope, compiler::context::type::FUNCTION, tokens_, function_block_start, curr_token).compile();
     }
     // parse content between function_block_start and curr_token (block end)
     auto content = assignment + "{ scopeName \"____carma2_main_scope\";" + parameters + block + "nil;}";
@@ -103,12 +103,12 @@ void carma::rules::function_declaration::functionKeyWord(CarmaScope& aScope, tok
 
 }
 
-void carma::rules::function_declaration::returnKeyWord(CarmaScope& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void carma::rules::function_declaration::return_keyword(carma::compiler::context& aScope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
     auto return_token = std::next(start_entry_);
     if (return_token == tokens_.end())
         return;
 
-    if (!aScope.InScopeType(compiler::context::Type::FUNCTION))
+    if (!aScope.in_scope(compiler::context::type::FUNCTION))
         throw std::exception("Return statement must be in a function context");
 
     if (return_token->type == carma::type::LITERAL) {
@@ -130,7 +130,7 @@ void carma::rules::function_declaration::returnKeyWord(CarmaScope& aScope, token
         }
 
         // compile the content of the statement
-        auto return_string = CarmaScope(&aScope, compiler::context::Type::STATEMENT, tokens_, return_token_start, return_token_end).Compile();
+        auto return_string = carma::compiler::context(&aScope, compiler::context::type::STATEMENT, tokens_, return_token_start, return_token_end).compile();
         
         // clear tokens we already processed
         compiler::empty_tokens(tokens_, return_token_start, return_token_end);      
