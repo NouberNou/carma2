@@ -5,18 +5,17 @@ carma2_object.__id = -1;
 carma2_object.__handles = [];
 carma2_object.__prototype = objNull;
 
-carma2_object.__isTypeOf = {
-    params ["_type"];
+carma2_object.__isTypeOf = function(_type) {
     private _found = false;
     private _check = _thisObj;
-    while {_check != objNull} do {
-        if(_check == _type) exitWith {
-            _found = true;
+    while (_check != objNull) {
+        if(_check == _type) {
+            return true;
         };
         _check = _check.__prototype;
     };
-    _found;
+    return false;
 };
 
-carma2_object.__baseMembers = allVariables carma2_object;
-carma2_object.__baseMembers pushBack "__basemembers";
+carma2_object.__baseMembers = allVariables(carma2_object);
+pushBack(carma2_object.__baseMembers, "__basemembers");
