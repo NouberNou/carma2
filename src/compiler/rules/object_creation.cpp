@@ -86,62 +86,51 @@ void carma::rules::object_creation::handle_anon_object(carma::compiler::context&
     }
 
     std::vector<std::string> newObject_arguments;
-    int block_counter = 0;
     for (current_token; current_token != end_entry_ && current_token->val != "}"; current_token++) {
 
         if (std::next(current_token) == end_entry_ || std::next(current_token, 2) == end_entry_)
             break;
 
         if (std::next(current_token)->val == ":") {
-
+            // The name of our value
             auto name_token = current_token;
+
             // Find the value
-            std::string value = "";
-            int value_block = 0;
             auto value_start_token = std::next(current_token, 2);
             auto value_end_token = std::next(current_token, 2);
-            if (value_start_token->val == "{") {
-                bool hasPassedStart = false;
-                block_counter = 0;
-                for (value_end_token; value_end_token != end_entry_ && (value_end_token->val != "}" && (block_counter > 0 || !hasPassedStart)); value_end_token++) {
-                    if (value_end_token->val == "{") {
-                        block_counter++;
-                        hasPassedStart = true;
-                    }
-                    if (value_end_token->val == "}")
-                        block_counter--;
+            int block_counter = 0;
+
+            // loop until either end of this value (,) or end of the object ( } ). This will collect our value contents
+            for (current_token; current_token != end_entry_ && ((current_token->val != "}" && current_token->val != ",") || block_counter > 0); current_token++) {
+                if (current_token->type == carma::type::EMPTY)
+                    continue;
+                if (current_token->val == "{" || current_token->val == "[" || current_token->val == "(") {
+                    block_counter++;
                 }
+                if (current_token->val == "}" || current_token->val == "]" || current_token->val == ")") {
+                    block_counter--;
+                }
+            }
+            // Recursively compile our value
+            std::string value = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, value_start_token, current_token).compile();
+            
+            // Create our key value pair for object creation
+            newObject_arguments.push_back("[\"" + name_token->val + "\", " + value + "]");
 
-                current_token = value_end_token;
-                auto endOf = std::next(value_end_token);
-                value = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, value_start_token, endOf).compile();
-            }
-            else if (value_start_token->val == "[") {
-                // TODO go to end of [ and compile a statement
-            }
-            else if (value_start_token->val == "(") {
-                // TODO go to end of () and compile a statement
-            }
-            else {
-                value = value_start_token->val;
-                current_token++;
-                current_token++;
-            }
-            std::string object_variable = "[\"" + name_token->val + "\", " + value + "]";
-            newObject_arguments.push_back(object_variable);
-
+            // Move past our value end.
             if (std::next(current_token)->val == ",")
                 current_token++;
         }
-        else {
-            throw carma::compiler::exception::syntax_error("Invalid syntax for object creation");
+        else { // This means there was a space between our key and value or an invalid operator was used
+            if (std::next(current_token) != end_entry_)
+                throw carma::compiler::exception::syntax_error("Invalid syntax for object creation. Expected \":\". Found: \"" + std::next(current_token)->val + "\"" + " with name: " + current_token->val);
+            else
+                throw carma::compiler::exception::syntax_error("Invalid syntax for object creation. Possible missing \"}\"?");
         }
     }
     auto end = current_token;
-    for (int i = 0; i < block_counter; i++)
-        end++;
 
-    compiler::empty_tokens(tokens_, start_entry_, end);
+    compiler::empty_tokens(tokens_, start_entry_, std::next(end));
 
     std::stringstream stream;
     stream << "[";
@@ -152,7 +141,7 @@ void carma::rules::object_creation::handle_anon_object(carma::compiler::context&
         }
     }
     stream << "]";
-    start_entry_ = --current_token;
+    // start_entry_ = --current_token;
     start_entry_->type = carma::type::METHODCALL;
     start_entry_->val = "([" + stream.str() + ", carma2_AnonObject, _thisScript] call carma2_fnc_newObject)";
 }

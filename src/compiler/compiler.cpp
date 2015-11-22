@@ -93,7 +93,7 @@ namespace carma {
                 if (current_token->type == carma::type::EMPTY)
                     continue;
 
-                if (current_token->val == "new" || current_token->val == "del") {
+                if (current_token->val == "new" || current_token->val == "del" || current_token->val == "{") {
                     compile_object(current_token, end_entry_);
                     continue;
                 }
@@ -186,7 +186,7 @@ namespace carma {
             }
             else if (start_entry_->val == "{") {
                 // create anomyous js style prototype object
-                // TODO implement
+                carma::rules::object_creation::handle_anon_object(*this, _tokens, start_entry_, end_entry_);
             }
             else if (start_entry_->val == "del") {
                 carma::rules::object_creation::handle_del_keyword(*this, _tokens, start_entry_, end_entry_);
