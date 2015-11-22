@@ -1,19 +1,18 @@
 #include "function_declaration.hpp"
 #include "../compiler.hpp"
-
 #include <sstream>
 
 using namespace carma;
+using namespace carma::rules;
 
-carma::rules::function_declaration::function_declaration()
-{
-}
+compiler::context::type function_keyword_rule::type = compiler::context::type::FUNCTION;
+compiler::context::type return_keyword_rule::type = compiler::context::type::FUNCTION;
 
-carma::rules::function_declaration::~function_declaration()
-{
-}
+bool function_keyword_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "function";
+};
 
-void carma::rules::function_declaration::function_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void function_keyword_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     auto curr_token = start_entry_;
     auto function_params_start = curr_token;
     auto function_params_end = function_params_start;
@@ -51,7 +50,7 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
     function_params_end = curr_token;
     function_params_end--; // skip to after the method parameters
 
-    // Parse condition between function_params_start and function_params_end
+                           // Parse condition between function_params_start and function_params_end
     std::string parameters = "";
     if (std::next(function_params_start) != function_params_end)
         parameters = carma::compiler::context(&a_scope, compiler::context::type::FUNCTION_PARAMS, tokens_, function_params_start, function_params_end).compile();
@@ -100,10 +99,13 @@ void carma::rules::function_declaration::function_keyword(carma::compiler::conte
     // Place content in our token list
     curr_token->type = carma::type::CODEBLOCK;
     curr_token->val = content;
+};
 
-}
+bool return_keyword_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "return";
+};
 
-void carma::rules::function_declaration::return_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+void return_keyword_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     auto return_token = std::next(start_entry_);
     if (return_token == tokens_.end())
         return;
@@ -131,9 +133,9 @@ void carma::rules::function_declaration::return_keyword(carma::compiler::context
 
         // compile the content of the statement
         auto return_string = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, return_token_start, return_token_end).compile();
-        
+
         // clear tokens we already processed
-        compiler::empty_tokens(tokens_, return_token_start, return_token_end);      
+        compiler::empty_tokens(tokens_, return_token_start, return_token_end);
 
         return_token->type = carma::type::EMPTY;
         start_entry_->type = carma::type::EMPTY;
@@ -144,4 +146,4 @@ void carma::rules::function_declaration::return_keyword(carma::compiler::context
         return_token_end->val = "((" + return_string + ") breakOut \"____carma2_main_scope\")";
         start_entry_ = return_token_end;
     }
-}
+};

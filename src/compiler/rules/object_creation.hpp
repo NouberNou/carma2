@@ -4,36 +4,26 @@
 
 namespace carma {
     namespace rules {
-        class object_creation
-        {
+
+        class new_keyword_rule : public carma::compiler::compiler_rule {
         public:
+            static compiler::context::type type;
+            bool match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            void apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+        };
 
-            /**
-            * Handle the new keyword
-            * @param a_scope Scope context
-            * @param start_entry_ Starting point
-            * @param end_entry_ Max token to where can be parsed
-            */
-            static void new_object(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
+        class del_keyword_rule : public carma::compiler::compiler_rule {
+        public:
+            static compiler::context::type type;
+            bool match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            void apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+        };
 
-            /**
-            * Handle the anonymous object creation ( { } )
-            * @param a_scope Scope context
-            * @param start_entry_ Starting point
-            * @param end_entry_ Max token to where can be parsed
-            */
-            static void handle_anon_object(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
-            
-            /**
-            * Handle the del keyword
-            * @param a_scope Scope context
-            * @param start_entry_ Starting point
-            * @param end_entry_ Max token to where can be parsed
-            */
-            static void handle_del_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
-             
-            object_creation();
-            ~object_creation();
+        class anon_object_rule : public carma::compiler::compiler_rule {
+        public:
+            static compiler::context::type type;
+            bool match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            void apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
         };
     }
 }

@@ -10,7 +10,7 @@ using namespace carma::tokenizer;
 
 namespace carma {
 	namespace compiler {
-
+        
         /**
         * Convert tokens into a string
         * @param tokens_ The tokens
@@ -46,8 +46,13 @@ namespace carma {
         */
         void empty_tokens(token_list& tokens_, token_entry& start_entry_, token_entry& end_entry_);
 
+        class compiler_rule;
+
         class context {
         public:
+
+            static std::vector<compiler_rule*> rules;
+
             /**
             * Possible context types
             */
@@ -122,33 +127,26 @@ namespace carma {
             * Compile regular scope or code
             */
             void compile_scope(token_entry& start_entry_, token_entry& end_entry_);
+            void compile_scope(token_entry& start_entry_, token_entry& end_entry_, const context::type aTypeMatch);
 
             /**
             * Compile function parameters
             */
             void compile_params(token_entry& start_entry_, token_entry& end_entry_);
 
-            /**
-            * Compile a function definiton
-            */
-            void compile_function(token_entry& start_entry_, token_entry& end_entry_);
-
-            /**
-            * Compile an object definiton
-            */
-            void compile_object(token_entry& start_entry_, token_entry& end_entry_);
-
-
-            /**
-            * Compile a control structure
-            * Possible control structures: if, switch, while
-            */
-            void compile_control_structure(token_entry& start_entry_, token_entry& end_entry_);
-            
-
             token_list& _tokens;
             token_entry& _start_token;
             token_entry& _end_token;
+        };
+
+
+        class compiler_rule {
+        public:
+            static context::type type;
+            compiler_rule() {};
+            ~compiler_rule() {};
+            virtual bool match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) { return false; };
+            virtual void apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) { };
         };
 
         namespace exception {

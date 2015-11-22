@@ -4,29 +4,19 @@
 
 namespace carma {
     namespace rules {
-        class function_declaration
-        {
+
+        class function_keyword_rule : public carma::compiler::compiler_rule {
         public:
-
-            /**
-            * Handle the function keyword
-            * @param a_scope Scope context
-            * @param start_entry_ Starting point
-            * @param end_entry_ Max token to where can be parsed
-            */
-            static void function_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
-
-            /**
-            * Handle the return keyword
-            * @param a_scope Scope context
-            * @param start_entry_ Starting point
-            * @param end_entry_ Max token to where can be parsed
-            */
-            static void return_keyword(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_);
-
-            function_declaration();
-            ~function_declaration();
+            static compiler::context::type type;
+            bool match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            void apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
         };
 
+        class return_keyword_rule : public carma::compiler::compiler_rule {
+        public:
+            static compiler::context::type type;
+            bool match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+            void apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+        };
     }
 }

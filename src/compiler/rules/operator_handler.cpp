@@ -2,15 +2,19 @@
 #include "script_commands.hpp"
 #include <iostream>
 
-carma::rules::operator_handler::operator_handler()
-{
-}
+using namespace carma;
+using namespace carma::rules;
 
-carma::rules::operator_handler::~operator_handler()
-{
-}
+compiler::context::type operator_dot_rule::type = compiler::context::type::STATEMENT;
+compiler::context::type function_call_rule::type = compiler::context::type::STATEMENT;
+compiler::context::type array_access_rule::type = compiler::context::type::STATEMENT;
+compiler::context::type member_access_rule::type = compiler::context::type::STATEMENT;
 
-void carma::rules::operator_handler::dot_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+bool operator_dot_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return std::next(start_entry_) != end_entry_ && (std::next(start_entry_)->val == "." || std::next(start_entry_)->val == "::");
+};
+
+void operator_dot_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type == carma::type::SCALAR)
         return;
 
@@ -125,14 +129,18 @@ void carma::rules::operator_handler::dot_operator(carma::compiler::context& a_sc
         }
         start_entry_ = --arg_token_end;
     }
-}
+};
 
-void carma::rules::operator_handler::method_call_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+bool function_call_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return std::next(start_entry_) != end_entry_ && (std::next(start_entry_)->val == "(");
+};
+
+void function_call_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
 
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
-        start_entry_->type != carma::type::METHODCALL && 
+        start_entry_->type != carma::type::METHODCALL &&
         start_entry_->type != carma::type::CODEBLOCK)
         return;
     uint32_t block_counter = 0;
@@ -161,7 +169,7 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
         auto arg_token_end = std::next(start_entry_, 2);
 
         if (arg_token_end == end_entry_)
-            throw carma::compiler::exception::syntax_error("hanging ( operator"); 
+            throw carma::compiler::exception::syntax_error("hanging ( operator");
 
         // Check if we use our command as a method
         if (paren_token->val == "(") { // we got a method invoke
@@ -264,9 +272,14 @@ void carma::rules::operator_handler::method_call_operator(carma::compiler::conte
     arg_token_end->type = carma::type::FUNCTIONCALL;
     arg_token_end->val = "([" + arg_string + "] call " + function_token->val + ")";
     start_entry_ = --arg_token_end;
-}
+};
 
-void carma::rules::operator_handler::array_access_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+
+bool array_access_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return std::next(start_entry_) != end_entry_ && (std::next(start_entry_)->val == "[");
+};
+
+void array_access_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
@@ -321,7 +334,7 @@ void carma::rules::operator_handler::array_access_operator(carma::compiler::cont
     }
     object_token->type = carma::type::EMPTY;
     bracket_token->type = carma::type::EMPTY;
-    
+
     auto following_token = std::next(arg_token_end);
     bool is_assignment = false;
     if (following_token != end_entry_ && following_token->val == "=") {
@@ -360,9 +373,14 @@ void carma::rules::operator_handler::array_access_operator(carma::compiler::cont
         val_token_end->val = "(" + object_token->val + " set [" + arg_string + ", " + val_string + "])";
         start_entry_ = val_token_end;
     }
-}
+};
 
-void carma::rules::operator_handler::member_access_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+
+bool member_access_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return std::next(start_entry_) != end_entry_ && (std::next(start_entry_)->val == "{");
+};
+
+void member_access_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     if (start_entry_->type != carma::type::LITERAL &&
         start_entry_->type != carma::type::ARRAYACCESSOR &&
         start_entry_->type != carma::type::MEMBERACCESSOR &&
@@ -434,4 +452,4 @@ void carma::rules::operator_handler::member_access_operator(carma::compiler::con
         val_token_end->val = "(" + object_token->val + " setVariable [" + arg_string + ", " + val_string + "])";
         start_entry_ = val_token_end;
     }
-}
+};

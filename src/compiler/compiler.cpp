@@ -11,6 +11,9 @@
 namespace carma {
 	namespace compiler {
 
+        /*static*/ compiler::context::type compiler_rule::type = compiler::context::type::SCOPE;
+        /*static*/ std::vector<compiler_rule*> context::rules = std::vector<compiler_rule*>();
+
         context::context(type context_type_, token_list& tokens) : parent(nullptr), context_type(context_type_), _tokens(tokens),
             _start_token(tokens.begin()), _end_token(tokens.end())
         {
@@ -46,10 +49,10 @@ namespace carma {
                     compile_params(start_entry_, end_entry_);
                     break;
                 case type::CONTROL_STRUCTURE:
-                    compile_control_structure(start_entry_, end_entry_);;
+                    compile_scope(start_entry_, end_entry_, type::CONTROL_STRUCTURE);
                     break;
                 case type::OBJECT:
-                    compile_object(start_entry_, end_entry_);
+                    compile_scope(start_entry_, end_entry_, type::OBJECT);
                     break;
                 default:
                     compile_scope(start_entry_, end_entry_);
@@ -93,42 +96,23 @@ namespace carma {
                 if (current_token->type == carma::type::EMPTY)
                     continue;
                 
-                if (current_token->val == "new" || current_token->val == "del" || current_token->val == "{") {
-                    compile_object(current_token, end_entry_);
-                    continue;
+                for (auto rule : rules) {
+                    if (rule->match(*this, _tokens, current_token, end_entry_)) {
+                        rule->apply(*this, _tokens, current_token, end_entry_);
+                        break;
+                    }
                 }
-                if (current_token->val == "function") {
-                    compile_function(current_token, end_entry_);
+            }
+        }
+        void context::compile_scope(token_entry& start_entry_, token_entry& end_entry_, context::type aTypeMatch) {
+            for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
+                if (current_token->type == carma::type::EMPTY)
                     continue;
-                }
-                if (current_token->val == "return") {
-                    carma::rules::function_declaration::return_keyword(*this, _tokens, current_token, end_entry_);
-                    continue;
-                }
-                if (current_token->val == "if" || current_token->val == "switch" || current_token->val == "while" || current_token->val == "waituntil" || current_token->val == "forEach" || current_token->val == "foreach" || current_token->val == "try") {
-                    compile_control_structure(current_token, end_entry_);
-                    continue;
-                }
 
-                if (std::next(current_token) != end_entry_ && (
-                    std::next(current_token)->val == "." ||
-                    std::next(current_token)->val == "::" ||
-                    std::next(current_token)->val == "[" ||
-                    std::next(current_token)->val == "(" ||
-                    std::next(current_token)->val == "{"
-                    )) {
-                    // std::cout << "Process operator: " << current_token->val << " operator: " << std::next(current_token)->val << std::endl;
-                    if (std::next(current_token)->val == "." || std::next(current_token)->val == "::") {
-                        rules::operator_handler::dot_operator(*this, _tokens, current_token, end_entry_);
-                    }
-                    else if (std::next(current_token)->val == "[") {
-                        rules::operator_handler::array_access_operator(*this, _tokens, current_token, end_entry_);
-                    }
-                    else if (std::next(current_token)->val == "{") {
-                        rules::operator_handler::member_access_operator(*this, _tokens, current_token, end_entry_);
-                    }
-                    else if (std::next(current_token)->val == "(") {
-                        rules::operator_handler::method_call_operator(*this, _tokens, current_token, end_entry_);
+                for (auto rule : rules) {
+                    if (rule->type == aTypeMatch && rule->match(*this, _tokens, current_token, end_entry_)) {
+                        rule->apply(*this, _tokens, current_token, end_entry_);
+                        break;
                     }
                 }
             }
@@ -179,56 +163,6 @@ namespace carma {
             }
         }
 
-        void context::compile_object(token_entry& start_entry_, token_entry& end_entry_) { 
-            if (start_entry_->val == "new") {
-                // copy of prototype
-                carma::rules::object_creation::new_object(*this, _tokens, start_entry_, end_entry_);
-            }
-            else if (start_entry_->val == "{") {
-                // create anomyous js style prototype object
-                carma::rules::object_creation::handle_anon_object(*this, _tokens, start_entry_, end_entry_);
-            }
-            else if (start_entry_->val == "del") {
-                carma::rules::object_creation::handle_del_keyword(*this, _tokens, start_entry_, end_entry_);
-            }
-        }
-
-        void context::compile_function(token_entry& start_entry_, token_entry& end_entry_) {
-            if (start_entry_->val == "function") {
-                if (std::next(start_entry_)->val == "(") {
-                    carma::rules::function_declaration::function_keyword(*this, _tokens, start_entry_, end_entry_);
-                }
-                else {
-                    carma::rules::function_declaration::function_keyword(*this, _tokens, start_entry_, end_entry_);
-                }
-            }  
-        }
-
-        void context::compile_control_structure(token_entry& start_entry_, token_entry& end_entry_) {
-
-            if (start_entry_->val == "if") {
-                rules::control_structures::if_statement(*this, _tokens, start_entry_, end_entry_);
-            }
-            else if (start_entry_->val == "switch") {
-                rules::control_structures::switch_statement(*this, _tokens, start_entry_, end_entry_);
-            }
-            else if (start_entry_->val == "while") {
-                rules::control_structures::while_statement(*this, _tokens, start_entry_, end_entry_);
-            }
-            else if (start_entry_->val == "waituntil") {
-                rules::control_structures::waituntil_statement(*this, _tokens, start_entry_, end_entry_);
-            }
-            else if (start_entry_->val == "foreach" || start_entry_->val == "forEach") {
-                rules::control_structures::foreach_statement(*this, _tokens, start_entry_, end_entry_);                
-            }
-            else if (start_entry_->val == "try") {
-                rules::control_structures::try_block(*this, _tokens, start_entry_, end_entry_);                
-            }
-            else {
-                throw exception::syntax_error("Not a control structure"); // TODO proper exception here
-            }
-        }
-        
         bool context::in_scope(type context_type_) {
             if (context_type == context_type_)
                 return true;

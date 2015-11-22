@@ -2,22 +2,23 @@
 #include <sstream>
 
 using namespace carma;
+using namespace carma::rules;
 
-rules::control_structures::control_structures()
-{
-}
+compiler::context::type if_statement_rule::type = compiler::context::type::CONTROL_STRUCTURE;
+compiler::context::type switch_statement_rule::type = compiler::context::type::CONTROL_STRUCTURE;
+compiler::context::type while_statement_rule::type = compiler::context::type::CONTROL_STRUCTURE;
+compiler::context::type waituntil_statement_rule::type = compiler::context::type::CONTROL_STRUCTURE;
+compiler::context::type foreach_statement_rule::type = compiler::context::type::CONTROL_STRUCTURE;
+compiler::context::type try_block_rule::type = compiler::context::type::CONTROL_STRUCTURE;
 
+bool if_statement_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "if";
+};
 
-rules::control_structures::~control_structures()
-{
-}
-
-
-carma::compiler::scopes rules::control_structures::if_statement(carma::compiler::context& scope_, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
-{
+void if_statement_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
-    
+
     auto current_token = start_entry_;
     auto statement_start = current_token;
     auto if_start = start_entry_;
@@ -47,13 +48,13 @@ carma::compiler::scopes rules::control_structures::if_statement(carma::compiler:
             block_counter--;
     }
     // Compile between start_entry_ and current_token for the condition call
-    auto statement_scope = carma::compiler::context(&scope_, compiler::context::type::STATEMENT, tokens_, statement_start, current_token).compile();
+    auto statement_scope = carma::compiler::context(&a_scope, compiler::context::type::STATEMENT, tokens_, statement_start, current_token).compile();
 
     if (statement_scope == "")  // condition must at least have one character
         throw carma::compiler::exception::syntax_error("Empty condition!");
 
     stream << "if " << statement_scope << " then {";
-    
+
     int on_end = 0;
     while (current_token->val == "{" || current_token->val == "else") {
 
@@ -95,11 +96,11 @@ carma::compiler::scopes rules::control_structures::if_statement(carma::compiler:
                     block_counter--;
             }
             // Compile between current_token and current_token for the condition call
-            carma::compiler::context statement_scope = carma::compiler::context(&scope_, compiler::context::type::SCOPE, tokens_, statement_start, current_token);
+            carma::compiler::context statement_scope = carma::compiler::context(&a_scope, compiler::context::type::SCOPE, tokens_, statement_start, current_token);
             stream << "if " << statement_scope.compile() << " then {";
 
             current_token++; // advance past the )
-            
+
         }
         if (std::prev(current_token)->val == "{") {
             current_token--;
@@ -126,13 +127,13 @@ carma::compiler::scopes rules::control_structures::if_statement(carma::compiler:
 
         if (block_counter > 0)
             throw carma::compiler::exception::syntax_error("syntax error!"); //syntax error
-        
+
         if (current_token != block_start_token) {
             block_start_token++;
 
             // code block is: block_start_token till current_token
             // process contents within code block regulary
-            carma::compiler::context content_scope = carma::compiler::context(&scope_, compiler::context::type::SCOPE, tokens_, block_start_token, current_token);
+            carma::compiler::context content_scope = carma::compiler::context(&a_scope, compiler::context::type::SCOPE, tokens_, block_start_token, current_token);
             auto block_content = content_scope.compile();
             stream << "" << block_content << "}";
             scopes.push_back(content_scope);
@@ -140,7 +141,7 @@ carma::compiler::scopes rules::control_structures::if_statement(carma::compiler:
         else {
             stream << "}";
         }
-        
+
         if (current_token != end_entry_) {
             if (std::next(current_token)->val == "else") {
                 current_token++;
@@ -166,11 +167,14 @@ carma::compiler::scopes rules::control_structures::if_statement(carma::compiler:
     current_token->val = stream.str();
     start_entry_ == current_token;
 
-    return scopes;
-}
+};
 
-carma::compiler::scopes rules::control_structures::switch_statement(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
-{
+
+bool switch_statement_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "switch";
+};
+
+void switch_statement_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
     auto current_token = start_entry_;
@@ -268,7 +272,7 @@ carma::compiler::scopes rules::control_structures::switch_statement(carma::compi
                 label_seen = true;
             }
         }
-        if (block_counter > 0) 
+        if (block_counter > 0)
             throw carma::compiler::exception::syntax_error("Missing break keyword behind case label");
 
         current_token--;
@@ -291,9 +295,9 @@ carma::compiler::scopes rules::control_structures::switch_statement(carma::compi
 
         if (current_token == end_entry_)
             throw carma::compiler::exception::syntax_error("On the end already");
-        
+
         //if (current_token == end_entry_ || std::next(current_token) == end_entry_);
-       //     throw std::exception("On the end already");
+        //     throw std::exception("On the end already");
         if (current_token->val == "case" || current_token->val == "default")
             current_token--;
 
@@ -311,18 +315,21 @@ carma::compiler::scopes rules::control_structures::switch_statement(carma::compi
         }
     }
     stream << "};";
-    
+
     compiler::empty_tokens(tokens_, start_entry_, current_token);
     current_token->type == carma::type::CODEBLOCK;
     current_token->val = stream.str();
 
     start_entry_ = current_token--;
 
-    return scopes;
-}
+};
 
-carma::compiler::scopes rules::control_structures::while_statement(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
-{
+
+bool while_statement_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "while";
+};
+
+void while_statement_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
 
@@ -361,7 +368,7 @@ carma::compiler::scopes rules::control_structures::while_statement(carma::compil
     stream << "while {(" << statement_scope << ")} do {" << std::endl;
     if (current_token->val != "{")
         throw carma::compiler::exception::missing_bracket("Missing {");
-    
+
     bool has_encountered_code_block = false;
     auto block_start_token = current_token;
     block_counter = 0;
@@ -390,7 +397,7 @@ carma::compiler::scopes rules::control_structures::while_statement(carma::compil
     stream << "" << content_scope.compile() << ";" << std::endl;
 
     scopes.push_back(content_scope);
-    
+
     // clear out everything from start until current token
     compiler::empty_tokens(tokens_, start_entry_, current_token);
 
@@ -399,18 +406,23 @@ carma::compiler::scopes rules::control_structures::while_statement(carma::compil
     current_token->type = carma::type::CODEBLOCK;
     current_token->val = stream.str();
 
-    return scopes;
-}
+};
 
-carma::compiler::scopes rules::control_structures::waituntil_statement(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
-{
-    carma::compiler::scopes scopes = carma::compiler::scopes();
 
-    return scopes;
-}
+bool waituntil_statement_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "waitUntil";
+};
 
-carma::compiler::scopes rules::control_structures::foreach_statement(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
-{
+void waituntil_statement_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+
+};
+
+
+bool foreach_statement_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "foreach" || start_entry_->val == "forEach";
+};
+
+void foreach_statement_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
 
@@ -487,12 +499,14 @@ carma::compiler::scopes rules::control_structures::foreach_statement(carma::comp
     current_token->type = carma::type::CODEBLOCK;
     current_token->val = stream.str();
 
-    return scopes;
-}
+};
 
 
-carma::compiler::scopes rules::control_structures::try_block(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
-{
+bool try_block_rule::match(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    return start_entry_->val == "try";
+};
+
+void try_block_rule::apply(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
     carma::compiler::scopes scopes = carma::compiler::scopes();
     std::stringstream stream;
 
@@ -562,19 +576,18 @@ carma::compiler::scopes rules::control_structures::try_block(carma::compiler::co
     }
     if (current_token == end_entry_ && block_counter > 0)
         throw carma::compiler::exception::syntax_error("syntax error!"); //syntax error
-       
+
     block_start_token++;
     // Process the catch block
     auto catch_scope = carma::compiler::context(&a_scope, compiler::context::type::SCOPE, tokens_, block_start_token, current_token);
     stream << "catch {" << catch_scope.compile() << ";" << std::endl;
 
     scopes.push_back(content_scope);
-   
+
     compiler::empty_tokens(tokens_, start_entry_, current_token);
     // replace current start value by stream.str(). Set proper type
     // set our code block contents
     current_token->type = carma::type::CODEBLOCK;
     current_token->val = stream.str();
     start_entry_ = block_start_token;
-    return scopes;
-}
+};
