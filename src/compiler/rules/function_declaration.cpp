@@ -111,7 +111,7 @@ void carma::rules::function_declaration::return_keyword(carma::compiler::context
     if (!a_scope.in_scope(compiler::context::type::FUNCTION))
         throw std::exception("Return statement must be in a function context");
 
-    if (return_token->type == carma::type::LITERAL) {
+    if (return_token->type == carma::type::LITERAL || return_token->type == carma::type::OPERATOR) {
         uint32_t block_counter = 0;
         auto return_token_end = return_token;
         if (return_token_end == end_entry_)
