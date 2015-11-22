@@ -11,6 +11,9 @@ carma::rules::operator_handler::~operator_handler()
 }
 
 void carma::rules::operator_handler::dot_operator(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_) {
+    if (start_entry_->type == carma::type::SCALAR)
+        return;
+
     auto object_token = start_entry_;
     auto dot_token = std::next(start_entry_);
     auto member_token = std::next(start_entry_, 2);
