@@ -90,6 +90,8 @@ void carma::rules::object_creation::handle_anon_object(carma::compiler::context&
 
         if (std::next(current_token) == end_entry_ || std::next(current_token, 2) == end_entry_)
             break;
+        if (current_token->val == ")" || current_token->val == "]" || current_token->val == "}")
+            break;
 
         if (std::next(current_token)->val == ":") {
             // The name of our value
@@ -129,8 +131,10 @@ void carma::rules::object_creation::handle_anon_object(carma::compiler::context&
         }
     }
     auto end = current_token;
+    if (end->val == "}")
+        end++;
 
-    compiler::empty_tokens(tokens_, start_entry_, std::next(end));
+    compiler::empty_tokens(tokens_, start_entry_, end);
 
     std::stringstream stream;
     stream << "[";
