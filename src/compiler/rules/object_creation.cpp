@@ -74,6 +74,13 @@ void carma::rules::object_creation::new_object(carma::compiler::context& a_scope
 
 
 void carma::rules::object_creation::handle_anon_object(carma::compiler::context& a_scope, tokenizer::token_list &tokens_, tokenizer::token_entry& start_entry_, tokenizer::token_entry& end_entry_) {
+    if (start_entry_->val == "{" && start_entry_ != tokens_.begin() && (
+        std::prev(start_entry_)->val == "&&" ||
+        std::prev(start_entry_)->val == "||" ||
+        std::prev(start_entry_)->val == "and" ||
+        std::prev(start_entry_)->val == "or"))
+        return; // check for lazy eval expression
+
     auto current_token = std::next(start_entry_);
     if (current_token == tokens_.end())
         return;

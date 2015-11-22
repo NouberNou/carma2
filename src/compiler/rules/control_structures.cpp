@@ -489,3 +489,92 @@ carma::compiler::scopes rules::control_structures::foreach_statement(carma::comp
 
     return scopes;
 }
+
+
+carma::compiler::scopes rules::control_structures::try_block(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_)
+{
+    carma::compiler::scopes scopes = carma::compiler::scopes();
+    std::stringstream stream;
+
+    auto current_token = start_entry_;
+    auto statement_start = current_token;
+    int block_counter = 0;
+    bool has_encountered_condition = false;
+    current_token++; // move to {
+    if (current_token->val != "{")
+        throw carma::compiler::exception::missing_bracket("Missing {");
+
+    bool has_encountered_code_block = false;
+    auto block_start_token = current_token;
+    block_counter = 0;
+    // Move until the last bit of the if statement
+    for (current_token; current_token != end_entry_ && (!has_encountered_code_block || block_counter > 0); ++current_token) {
+        if (current_token->type == carma::type::EMPTY)
+            continue;
+
+        if (current_token->val == "{") {
+            if (!has_encountered_code_block) { // Store our block token for use later
+                block_start_token = current_token;
+            }
+            has_encountered_code_block = true;
+            block_counter++;
+        }
+        if (current_token->val == "}")
+            block_counter--;
+    }
+    if (current_token == end_entry_ && block_counter > 0)
+        throw carma::compiler::exception::syntax_error("syntax error!"); //syntax error
+    block_start_token++;
+
+    if (current_token->val != "catch")
+        throw carma::compiler::exception::syntax_error("Missing catch behind try");
+    auto catch_statement = current_token;
+
+    // code block is: block_start_token till current_token
+    // process contents within code block regulary
+    carma::compiler::context content_scope = carma::compiler::context(&a_scope, compiler::context::type::SCOPE, tokens_, block_start_token, catch_statement);
+    stream << "try {" << content_scope.compile() << "" << std::endl;
+
+    scopes.push_back(content_scope);
+
+    // clear out everything from start until current token
+    compiler::empty_tokens(tokens_, start_entry_, current_token);
+    current_token++;
+
+    // handle the catch block
+    has_encountered_code_block = false;
+    block_start_token = current_token;
+    block_counter = 0;
+    // Move until the last bit of the if statement
+    for (current_token; current_token != end_entry_ && (!has_encountered_code_block || block_counter > 0); ++current_token) {
+        if (current_token->type == carma::type::EMPTY)
+            continue;
+
+        if (current_token->val == "{") {
+            if (!has_encountered_code_block) { // Store our block token for use later
+                block_start_token = current_token;
+            }
+            has_encountered_code_block = true;
+            block_counter++;
+        }
+        if (current_token->val == "}")
+            block_counter--;
+    }
+    if (current_token == end_entry_ && block_counter > 0)
+        throw carma::compiler::exception::syntax_error("syntax error!"); //syntax error
+       
+    block_start_token++;
+    // Process the catch block
+    auto catch_scope = carma::compiler::context(&a_scope, compiler::context::type::SCOPE, tokens_, block_start_token, current_token);
+    stream << "catch {" << catch_scope.compile() << ";" << std::endl;
+
+    scopes.push_back(content_scope);
+   
+    compiler::empty_tokens(tokens_, start_entry_, current_token);
+    // replace current start value by stream.str(). Set proper type
+    // set our code block contents
+    current_token->type = carma::type::CODEBLOCK;
+    current_token->val = stream.str();
+    start_entry_ = block_start_token;
+    return scopes;
+}

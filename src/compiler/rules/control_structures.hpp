@@ -54,6 +54,15 @@ namespace carma {
             * @returns all code blocks (scopes) from control structure
             */
             static carma::compiler::scopes foreach_statement(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
+
+            /**
+            * Handle the try block
+            * @param a_scope Scope context
+            * @param start_entry_ Starting point
+            * @param end_entry_ Max token to where can be parsed
+            * @returns all code blocks (scopes) from control structure
+            */
+            static carma::compiler::scopes try_block(carma::compiler::context& a_scope, token_list &tokens_, token_entry& start_entry_, token_entry& end_entry_);
         };
     }
 }

@@ -92,7 +92,7 @@ namespace carma {
             for (token_entry current_token = start_entry_; current_token != end_entry_; ++current_token) {
                 if (current_token->type == carma::type::EMPTY)
                     continue;
-
+                
                 if (current_token->val == "new" || current_token->val == "del" || current_token->val == "{") {
                     compile_object(current_token, end_entry_);
                     continue;
@@ -105,7 +105,7 @@ namespace carma {
                     carma::rules::function_declaration::return_keyword(*this, _tokens, current_token, end_entry_);
                     continue;
                 }
-                if (current_token->val == "if" || current_token->val == "switch" || current_token->val == "while" || current_token->val == "waituntil" || current_token->val == "forEach" || current_token->val == "foreach") {
+                if (current_token->val == "if" || current_token->val == "switch" || current_token->val == "while" || current_token->val == "waituntil" || current_token->val == "forEach" || current_token->val == "foreach" || current_token->val == "try") {
                     compile_control_structure(current_token, end_entry_);
                     continue;
                 }
@@ -211,7 +211,6 @@ namespace carma {
             }
             else if (start_entry_->val == "switch") {
                 rules::control_structures::switch_statement(*this, _tokens, start_entry_, end_entry_);
-
             }
             else if (start_entry_->val == "while") {
                 rules::control_structures::while_statement(*this, _tokens, start_entry_, end_entry_);
@@ -221,6 +220,9 @@ namespace carma {
             }
             else if (start_entry_->val == "foreach" || start_entry_->val == "forEach") {
                 rules::control_structures::foreach_statement(*this, _tokens, start_entry_, end_entry_);                
+            }
+            else if (start_entry_->val == "try") {
+                rules::control_structures::try_block(*this, _tokens, start_entry_, end_entry_);                
             }
             else {
                 throw exception::syntax_error("Not a control structure"); // TODO proper exception here
